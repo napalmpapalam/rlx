@@ -1,6 +1,6 @@
 [package]
 name = "rlx"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 
 description = "CLI tool to validate releases of the npm packages with ease"

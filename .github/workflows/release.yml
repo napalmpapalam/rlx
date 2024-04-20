@@ -205,6 +205,7 @@ jobs:
           asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
 
   npm_publish:
+    name: Publish to NPM
     runs-on: ubuntu-latest
     needs: release
     steps:
@@ -214,8 +215,9 @@ jobs:
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
-      - run: cd ./npm
-      - run: npm ci
-      - run: npm publish
+      - run: |
+          cd ./npm
+          npm ci
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

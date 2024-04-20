@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.4] - 2024-04-20
+- Fix CI
+
 ## [v0.1.3] - 2024-04-20
 - Fix run binary
 - Add publish npm
@@ -21,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 
 
-[Unreleased]: https://github.com/napalmpapalam/rlx/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/napalmpapalam/rlx/compare/v0.1.4...HEAD
+[v0.1.4]: https://github.com/napalmpapalam/rlx/compare/v0.1.3...v0.1.4
 [v0.1.3]: https://github.com/napalmpapalam/rlx/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/napalmpapalam/rlx/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/napalmpapalam/rlx/compare/v0.1.0...v0.1.1
