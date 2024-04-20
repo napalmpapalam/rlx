@@ -8,7 +8,9 @@ const error = msg => {
   process.exit(1)
 }
 
-const { version, name, repository } = require("./package.json")
+const { version, repository } = require("./package.json")
+
+const NAME = "rlx"
 
 const supportedPlatforms = [
   {
@@ -51,7 +53,7 @@ const getPlatformMetadata = () => {
   }
 
   error(
-    `Platform with type "${type}" and architecture "${architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${cTable.getTable(
+    `Platform with type "${type}" and architecture "${architecture}" is not supported by ${NAME}.\nYour system must be one of the following:\n\n${cTable.getTable(
       supportedPlatforms
     )}`
   )
@@ -59,7 +61,7 @@ const getPlatformMetadata = () => {
 
 const getBinary = () => {
   const platformMetadata = getPlatformMetadata()
-  const url = `${repository.url}/releases/download/rust_v${version}/${name}-v${version}-${platformMetadata.RUST_TARGET}.tar.gz`
+  const url = `${repository.url}/releases/download/rust_v${version}/${NAME}-v${version}-${platformMetadata.RUST_TARGET}.tar.gz`
   return new Binary(platformMetadata.BINARY_NAME, url, version, {
     installDirectory: join(__dirname, "node_modules", ".bin")
   })
