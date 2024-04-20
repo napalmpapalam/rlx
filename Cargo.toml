@@ -1,16 +1,13 @@
 [package]
 name = "rlx"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 
-description = "CLI tool to validate releases of the npm packages with ease"
-repository = "https://github.com/napalmpapalam/rlx"
-authors = ["Semen Loktionov <loktionov.kh@gmail.com>"]
-
-readme = "README.md"
-license = "MIT"
-
-keywords = ["rlx", "changelog", "release"]
-categories = ["command-line-utilities"]
-
-include = ["src/**/*"]
+[dependencies]
+anyhow = "1"
+clap = { version = "4.5",  features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { default-features = false, version = "1.25", features = ["full"] }
+config = { version = "0.14", default-features = false, features = ["yaml"] }
+url = { version = "2", features = ["serde"] }
+package-json = "0.4.0"
