@@ -1,5 +1,5 @@
 {
-  "name": "rlx",
+  "name": "@napalmpapalam/rlx",
   "version": "0.1.2",
   "description": "Validate releases of the npm packages with ease",
   "author": "Semen Loktionov <loktionov.kh@gmail.com>",
