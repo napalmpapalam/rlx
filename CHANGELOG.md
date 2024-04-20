@@ -6,9 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2024-04-20
+## [v0.1.0] - 2024-04-20
 - Initial release
 
 
-[Unreleased]: https://github.com/napalmpapalam/rlx/compare/0.1.0...HEAD
-[0.1.0]: https://github.com/napalmpapalam/rlx/releases/tag/0.1.0
+[Unreleased]: https://github.com/napalmpapalam/rlx/compare/v0.1.0...HEAD
+[v0.1.0]: https://github.com/napalmpapalam/rlx/releases/tag/v0.1.0
