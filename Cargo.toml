@@ -1,0 +1,16 @@
+[package]
+name = "rlx"
+version = "0.1.0"
+edition = "2021"
+
+description = "CLI tool to validate releases of the npm packages with ease"
+repository = "https://github.com/napalmpapalam/rlx"
+authors = ["Semen Loktionov <loktionov.kh@gmail.com>"]
+
+readme = "README.md"
+license = "MIT"
+
+keywords = ["rlx", "changelog", "release"]
+categories = ["command-line-utilities"]
+
+include = ["src/**/*"]

@@ -1,0 +1,26 @@
+{
+  "name": "rlx",
+  "version": "0.1.0",
+  "description": "Validate releases of the npm packages with ease",
+  "author": "Semen Loktionov <loktionov.kh@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/napalmpapalam/rlx"
+  },
+  "bugs": {
+    "url": "https://github.com/napalmpapalam/rlx/issues"
+  },
+  "scripts": {
+    "postinstall": "node ./install.js"
+  },
+  "dependencies": {
+    "binary-install": "^1.1.0",
+    "console.table": "^0.10.0"
+  },
+  "keywords": [
+    "rlx",
+    "changelog",
+    "release"
+  ]
+}
