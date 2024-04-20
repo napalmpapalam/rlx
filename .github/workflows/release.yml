@@ -3,7 +3,7 @@ on:
     tags:
       - "rust_v*" # Run when tag matches rust_v*, i.e. rust_v1.0, rust_v20.15.10
 
-name: Release Rust Binary
+name: Release Rust Binary and NPM Package
 
 env:
   RELEASE_BIN: rlx

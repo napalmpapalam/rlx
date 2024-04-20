@@ -17,25 +17,25 @@ const supportedPlatforms = [
     TYPE: "Windows_NT",
     ARCHITECTURE: "x64",
     RUST_TARGET: "x86_64-pc-windows-msvc",
-    BINARY_NAME: "binary-install-example.exe"
+    BINARY_NAME: "rlx.exe"
   },
   {
     TYPE: "Linux",
     ARCHITECTURE: "x64",
     RUST_TARGET: "x86_64-unknown-linux-musl",
-    BINARY_NAME: "binary-install-example"
+    BINARY_NAME: "rlx"
   },
   {
     TYPE: "Darwin",
     ARCHITECTURE: "x64",
     RUST_TARGET: "x86_64-apple-darwin",
-    BINARY_NAME: "binary-install-example"
+    BINARY_NAME: "rlx"
   },
   {
     TYPE: "Darwin",
     ARCHITECTURE: "arm64",
     RUST_TARGET: "x86_64-apple-darwin",
-    BINARY_NAME: "binary-install-example"
+    BINARY_NAME: "rlx"
   }
 ]
 
