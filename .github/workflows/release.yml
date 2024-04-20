@@ -33,10 +33,10 @@ jobs:
             rust: stable
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
 
       - name: Cache Cargo registry
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         if: matrix.rust
         with:
           path: ~/.cargo/registry
@@ -45,7 +45,7 @@ jobs:
             ${{ matrix.build }}-stable-cargo-registry-
 
       - name: Cache Cargo index
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         if: matrix.rust
         with:
           path: ~/.cargo/git
@@ -54,7 +54,7 @@ jobs:
             ${{ matrix.build }}-stable-cargo-index-
 
       - name: Cache Cargo build
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         if: matrix.rust
         with:
           path: target/release
@@ -133,7 +133,7 @@ jobs:
           7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
 
       - name: Upload Zip
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.build }}
           path: ./${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}
@@ -152,7 +152,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -160,22 +160,22 @@ jobs:
           release_name: ${{ steps.get_version.outputs.VERSION }}
 
       - name: Download Linux tarball
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: linux
 
       - name: Download MacOS tarball
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: windows
 
       - name: Download MacOS tarball
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: macos
 
       - name: Release Linux tarball
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -185,7 +185,7 @@ jobs:
           asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
 
       - name: Release Windows tarball
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -195,7 +195,7 @@ jobs:
           asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
       - name: Release MacOS tarball
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
