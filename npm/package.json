@@ -1,6 +1,6 @@
 {
   "name": "rlx",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Validate releases of the npm packages with ease",
   "author": "Semen Loktionov <loktionov.kh@gmail.com>",
   "license": "MIT",
@@ -13,6 +13,9 @@
   },
   "scripts": {
     "postinstall": "node ./install.js"
+  },
+  "bin": {
+    "rlx": "run.js"
   },
   "dependencies": {
     "binary-install": "^1.1.0",
