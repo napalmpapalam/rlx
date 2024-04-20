@@ -1,7 +1,7 @@
 {
   "name": "@napalmpapalam/rlx",
-  "version": "0.1.5",
-  "description": "Validate releases of the npm packages with ease",
+  "version": "0.1.8",
+  "description": "Work with releases of the npm packages with ease",
   "author": "Semen Loktionov <loktionov.kh@gmail.com>",
   "license": "MIT",
   "repository": {
