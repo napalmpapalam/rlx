@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-       - 'v*.*.*'
+      - "rust_v*" # Run when tag matches rust_v*, i.e. rust_v1.0, rust_v20.15.10
 
 name: Release Rust Binary and NPM Package
 
@@ -156,7 +156,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          tag_name: rust_${{ steps.get_version.outputs.VERSION }}
           release_name: ${{ steps.get_version.outputs.VERSION }}
 
       - name: Download Linux tarball
