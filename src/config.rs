@@ -3,10 +3,10 @@ use serde::Deserialize;
 use std::path::Path;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct Config {
+pub struct Config {
     #[serde(default)]
-    pub(crate) workspace_path: Option<String>,
-    pub(crate) debug: Option<bool>,
+    pub workspace_path: Option<String>,
+    pub debug: Option<bool>,
 }
 
 impl Config {

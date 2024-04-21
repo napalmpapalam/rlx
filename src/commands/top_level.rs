@@ -8,14 +8,14 @@ use super::*;
 
 #[derive(Clone, Subcommand, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) enum Commands {
+pub enum Commands {
     /// Release Sanity Check
     #[command(name = "rsc")]
     ReleaseSanityCheck(rsc::ReleaseSanityCheck),
 }
 
 impl Commands {
-    pub(crate) async fn run(self, context: &Context) -> Result<()> {
+    pub async fn run(self, context: &Context) -> Result<()> {
         match self {
             Commands::ReleaseSanityCheck(cmd) => cmd.run(context).await,
         }

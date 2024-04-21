@@ -12,20 +12,20 @@ use crate::{
     },
 };
 
-pub(crate) struct PackageMetadata {
+pub struct PackageMetadata {
     version: String,
     name: String,
 }
 
 #[derive(Clone, Args, Debug, Serialize, Deserialize)]
 /// Check that a release is sane (package.json, CHANGELOG.md, etc.)
-pub(crate) struct ReleaseSanityCheck {
+pub struct ReleaseSanityCheck {
     /// The release version to check
     version: String,
 }
 
 impl ReleaseSanityCheck {
-    pub(crate) async fn run(&self, ctx: &Context) -> Result<()> {
+    pub async fn run(&self, ctx: &Context) -> Result<()> {
         print_checking_versions();
         let release_version = self.version.clone();
         debug(

@@ -20,16 +20,16 @@ const STYLES: Styles = Styles::styled()
 #[derive(Clone, Parser, Debug)]
 #[clap(about)]
 #[command(styles = STYLES)]
-pub(crate) struct Opts {
+pub struct Opts {
     /// HTTP Git repository URL (eg. https://github.com/napalmpapalam/rlx)
     #[arg(global = true, short, long)]
-    pub(crate) repository: Option<Url>,
+    pub repository: Option<Url>,
     /// Path to the workspace directory with the packages directories if it's mono-repo (eg. "./packages") (default: current directory)
     #[arg(global = true, short, long)]
-    pub(crate) workspace_path: Option<String>,
+    pub workspace_path: Option<String>,
     /// Enable debug mode
     #[arg(global = true, short, long)]
-    pub(crate) debug: Option<bool>,
+    pub debug: Option<bool>,
     #[command(subcommand)]
     cmd: commands::Commands,
 }
