@@ -1,4 +1,6 @@
-use eyre::{Context as _Context, OptionExt, Result};
+use std::process::Command;
+
+use eyre::{eyre, Context as _Context, OptionExt, Result};
 use git2::Repository;
 use regex::Regex;
 
@@ -20,10 +22,7 @@ impl Context {
             .clone()
             .or_else(|| config.as_ref().and_then(|c| c.workspace_path.clone()));
 
-        let debug = options
-            .debug
-            .or_else(|| config.as_ref().and_then(|c| c.debug))
-            .unwrap_or(false);
+        let debug = options.debug || config.as_ref().and_then(|c| c.debug).unwrap_or(false);
 
         Ok(Self {
             workspace_path,
@@ -41,16 +40,28 @@ impl Context {
     }
 
     pub fn git_tag(&self) -> Result<Option<String>> {
-        let repo = Repository::open(std::env::current_dir()?)?;
+        let output = Command::new("git")
+            .arg("log")
+            .arg("-1")
+            .arg("--format=\"%D\"")
+            .output()?;
 
-        let tag = repo
-            .tag_names(None)?
-            .iter()
-            .next()
-            .unwrap_or(None)
-            .map(|t| t.to_string());
+        if !output.status.success() {
+            return Err(eyre!("Git command executed with failing error code"));
+        }
 
-        Ok(tag)
+        let refs_report = String::from_utf8_lossy(&output.stdout);
+        let rx = Regex::new(r"/tag: ([\w\d\-_.]+)/i")?;
+        let version_match = rx.captures(&refs_report);
+
+        if version_match.is_none() {
+            return Ok(None);
+        }
+
+        Ok(version_match
+            .ok_or_eyre("Failed to get version from git tag")?
+            .get(1)
+            .map(|m| m.as_str().to_string()))
     }
 
     pub fn workspace_path(&self) -> Option<String> {

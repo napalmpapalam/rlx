@@ -28,8 +28,8 @@ pub struct Opts {
     #[arg(global = true, short, long)]
     pub workspace_path: Option<String>,
     /// Enable debug mode
-    #[arg(global = true, short, long)]
-    pub debug: Option<bool>,
+    #[arg(global = true, long)]
+    pub debug: bool,
     #[command(subcommand)]
     cmd: commands::Commands,
 }

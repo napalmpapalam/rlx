@@ -42,7 +42,7 @@ impl ReleaseSanityCheck {
             return Ok(());
         }
         if !self.validate_package_version(ctx, ver.clone())? {
-            error("Package version check is failed");
+            error("Release package version check is failed");
             return Ok(());
         }
 

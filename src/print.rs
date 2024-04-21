@@ -6,7 +6,7 @@ pub fn print_checking_versions() {
     println!(
         "{}{}",
         "[rlx]: ".yellow().bold(),
-        "Checking package versions...".blue().bold(),
+        "Running release sanity check...".blue().bold(),
     );
 }
 
@@ -14,7 +14,7 @@ pub fn print_invalid_package_version(name: String, expected: String, actual: Str
     eprintln!(
         "{}{}{}{}{}{}{}",
         "[rlx]: ".yellow().bold(),
-        "Version of the ".red(),
+        "Release version of the ".red(),
         name.red().bold(),
         " is invalid, expected: ".red(),
         expected.red().bold(),
@@ -49,7 +49,7 @@ pub fn print_valid_package_version(name: String) {
     println!(
         "{}{}{}{}",
         "[rlx]: ".yellow().bold(),
-        "Version of the ".green(),
+        "Release version of the ".green(),
         name.green().bold(),
         " is valid".green(),
     );
