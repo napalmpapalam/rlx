@@ -11,11 +11,12 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Result<Self> {
-        Ok(config::Config::builder()
+        config::Config::builder()
             .add_source(config::File::from(Path::new(".rlx.yml")).required(false))
             .add_source(config::Environment::with_prefix("RLX"))
             .build()
-            .with_context(|| "Failed to build config")?
-            .try_deserialize()?)
+            .wrap_err_with(|| "Failed to build config")?
+            .try_deserialize()
+            .wrap_err_with(|| "Failed to deserialize config")
     }
 }

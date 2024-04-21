@@ -1,4 +1,4 @@
-use eyre::{eyre, Context as _Context, Result};
+use eyre::{Context as _Context, OptionExt, Result};
 use git2::Repository;
 use regex::Regex;
 
@@ -12,7 +12,7 @@ pub struct Context {
 impl Context {
     pub fn new_from_options(options: &super::Opts) -> Result<Self> {
         let config = config::Config::new()
-            .with_context(|| "Failed to load config")
+            .wrap_err_with(|| "Failed to load config")
             .ok();
 
         let workspace_path = options
@@ -33,8 +33,10 @@ impl Context {
 
     pub fn repository(&self) -> Result<String> {
         let repo = Repository::open(std::env::current_dir()?)?;
-        let origin = repo.find_remote("origin")?;
-        let url = origin.url().ok_or(eyre!("Failed to get git remote URL"))?;
+        let origin = repo
+            .find_remote("origin")
+            .wrap_err_with(|| "Failed to find origin remote")?;
+        let url = origin.url().ok_or_eyre("Failed to get git remote URL")?;
         normalize_origin_url(url)
     }
 

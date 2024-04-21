@@ -32,7 +32,9 @@ impl ReleaseSanityCheck {
             ctx,
             format!("Provided release package version: {release_version}").as_str(),
         );
-        let valid = self.validate_package_version(ctx, self.version.clone())?;
+        let valid = self
+            .validate_package_version(ctx, self.version.clone())
+            .wrap_err_with(|| "Failed to validate package versions")?;
 
         if !valid {
             error("Package version check is failed");
@@ -61,7 +63,10 @@ impl ReleaseSanityCheck {
     ) -> Result<bool> {
         let mut valid = true;
         let dir = Path::new(workspace_path.as_str());
-        for entry in dir.read_dir()? {
+        for entry in dir
+            .read_dir()
+            .wrap_err_with(|| "Failed to read workspace directory")?
+        {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
@@ -70,8 +75,9 @@ impl ReleaseSanityCheck {
                     .ok_or(eyre!("Failed to convert path to string"))?
                     .to_string();
 
-                valid =
-                    self.validate_single_package_version(ctx, version.clone(), Some(path_str))?;
+                valid = self
+                    .validate_single_package_version(ctx, version.clone(), Some(path_str))
+                    .wrap_err_with(|| "Failed to validate single package version during validating the workspace directory")?;
             }
         }
 
@@ -106,9 +112,9 @@ impl ReleaseSanityCheck {
         let file = File::open(
             Path::new(path.as_str())
                 .canonicalize()
-                .with_context(|| "Failed to build package.json file path")?,
+                .wrap_err_with(|| "Failed to build package.json file path")?,
         )
-        .with_context(|| "Failed to open package.json file")?;
+        .wrap_err_with(|| "Failed to open package.json file")?;
         let json: serde_json::Value = serde_json::from_reader(file)?;
         let version = json
             .get("version")
