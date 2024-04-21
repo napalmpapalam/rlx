@@ -1,21 +1,21 @@
-use std::path::Path;
-
-pub use config::ConfigError;
+use eyre::{Context, Result};
 use serde::Deserialize;
-use url::Url;
+use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Config {
     #[serde(default)]
-    pub(crate) repository: Option<Url>,
+    pub(crate) workspace_path: Option<String>,
+    pub(crate) debug: Option<bool>,
 }
 
 impl Config {
-    pub fn new() -> Result<Self, ConfigError> {
-        config::Config::builder()
+    pub fn new() -> Result<Self> {
+        Ok(config::Config::builder()
             .add_source(config::File::from(Path::new(".rlx.yml")).required(false))
             .add_source(config::Environment::with_prefix("RLX"))
-            .build()?
-            .try_deserialize()
+            .build()
+            .with_context(|| "Failed to build config")?
+            .try_deserialize()?)
     }
 }

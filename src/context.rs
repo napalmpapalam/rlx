@@ -1,31 +1,53 @@
-use url::Url;
+use eyre::{eyre, Context as _Context, Result};
+use git2::Repository;
+use regex::Regex;
 
 use crate::config;
 
-pub(crate) struct Context {
-    repository: Option<Url>,
+pub struct Context {
+    workspace_path: Option<String>,
+    debug: bool,
 }
 
 impl Context {
-    pub(crate) fn new_from_options(options: &super::Opts) -> anyhow::Result<Self> {
+    pub fn new_from_options(options: &super::Opts) -> Result<Self> {
         let config = config::Config::new()
-            .map_err(|err| {
-                println!("{err:?}");
-                err
-            })
+            .with_context(|| "Failed to load config")
             .ok();
 
-        let repository = options
-            .repository
+        let workspace_path = options
+            .workspace_path
             .clone()
-            .or_else(|| config.as_ref().and_then(|c| c.repository.clone()));
+            .or_else(|| config.as_ref().and_then(|c| c.workspace_path.clone()));
 
-        Ok(Self { repository })
+        let debug = options
+            .debug
+            .or_else(|| config.as_ref().and_then(|c| c.debug))
+            .unwrap_or(false);
+
+        Ok(Self {
+            workspace_path,
+            debug,
+        })
     }
 
-    pub(crate) fn repository(&self) -> anyhow::Result<Url> {
-        self.repository
-            .clone()
-            .ok_or_else(|| anyhow::anyhow!("Git Repository URL missing"))
+    pub fn repository(&self) -> Result<String> {
+        let repo = Repository::open(std::env::current_dir()?)?;
+        let origin = repo.find_remote("origin")?;
+        let url = origin.url().ok_or(eyre!("Failed to get git remote URL"))?;
+        normalize_origin_url(url)
     }
+
+    pub fn workspace_path(&self) -> Option<String> {
+        self.workspace_path.clone()
+    }
+
+    pub fn debug(&self) -> bool {
+        self.debug
+    }
+}
+
+fn normalize_origin_url(url: &str) -> Result<String> {
+    let rx = Regex::new(r"git@(.+):(.+)\.git")?;
+    Ok(rx.replace(url, "https://$1/$2").to_string())
 }
