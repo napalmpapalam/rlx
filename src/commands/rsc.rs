@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     context::Context,
     print::{
-        debug, error, print_checking_versions, print_invalid_package_version,
-        print_valid_package_version,
+        debug, error, info, print_checking_versions, print_invalid_package_version,
+        print_valid_package_version, success,
     },
 };
 
@@ -21,28 +21,51 @@ pub struct PackageMetadata {
 /// Check that a release is sane (package.json, CHANGELOG.md, etc.)
 pub struct ReleaseSanityCheck {
     /// The release version to check
-    version: String,
+    version: Option<String>,
 }
 
 impl ReleaseSanityCheck {
     pub async fn run(&self, ctx: &Context) -> Result<()> {
         print_checking_versions();
-        let release_version = self.version.clone();
-        debug(
-            ctx,
-            format!("Provided release package version: {release_version}").as_str(),
-        );
-        let valid = self
-            .validate_package_version(ctx, self.version.clone())
-            .wrap_err_with(|| "Failed to validate package versions")?;
 
-        if !valid {
+        let ver = self.get_release_version(ctx)?;
+        if ver.is_none() {
+            info("No version tag found, skipping release sanity check...");
+            return Ok(());
+        }
+
+        let ver = ver.ok_or_eyre("Failed to get release version")?;
+        debug(ctx, format!("Release package version: {ver}").as_str());
+        debug(ctx, "Validating semver compatibility of release");
+
+        if !self.validate_semver_compatibility(ver.clone())? {
+            return Ok(());
+        }
+        if !self.validate_package_version(ctx, ver.clone())? {
             error("Package version check is failed");
             return Ok(());
         }
 
         println!("Repository URL: {}", ctx.repository()?);
         Ok(())
+    }
+
+    fn validate_semver_compatibility(&self, version: String) -> Result<bool> {
+        let semver = semver::Version::parse(&version);
+
+        match semver {
+            Ok(_) => {
+                success("Release version is compatible with semantic versioning");
+                Ok(true)
+            }
+            Err(e) => {
+                error(
+                    format!("Release version is not compatible with semantic versioning: {e}")
+                        .as_str(),
+                );
+                Ok(false)
+            }
+        }
     }
 
     fn validate_package_version(&self, ctx: &Context, version: String) -> Result<bool> {
@@ -128,5 +151,12 @@ impl ReleaseSanityCheck {
             .ok_or_eyre("No name found in package.json")?;
 
         Ok(PackageMetadata { version, name })
+    }
+
+    fn get_release_version(&self, ctx: &Context) -> Result<Option<String>> {
+        let git_tag = ctx
+            .git_tag()
+            .wrap_err_with(|| "Failed to get latest git tag")?;
+        Ok(self.version.clone().or(git_tag))
     }
 }

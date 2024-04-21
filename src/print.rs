@@ -32,6 +32,19 @@ pub fn error(msg: &str) {
     );
 }
 
+pub fn info(msg: &str) {
+    println!(
+        "{}{}{}",
+        "[rlx]: ".yellow().bold(),
+        "Info: ".bright_cyan(),
+        msg.bright_cyan().bold(),
+    );
+}
+
+pub fn success(msg: &str) {
+    println!("{}{}", "[rlx]: ".yellow().bold(), msg.green(),);
+}
+
 pub fn print_valid_package_version(name: String) {
     println!(
         "{}{}{}{}",

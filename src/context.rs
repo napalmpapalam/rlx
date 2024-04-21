@@ -40,6 +40,19 @@ impl Context {
         normalize_origin_url(url)
     }
 
+    pub fn git_tag(&self) -> Result<Option<String>> {
+        let repo = Repository::open(std::env::current_dir()?)?;
+
+        let tag = repo
+            .tag_names(None)?
+            .iter()
+            .next()
+            .unwrap_or(None)
+            .map(|t| t.to_string());
+
+        Ok(tag)
+    }
+
     pub fn workspace_path(&self) -> Option<String> {
         self.workspace_path.clone()
     }
