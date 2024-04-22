@@ -4,11 +4,11 @@ use eyre::{eyre, Context as _Context, OptionExt, Result};
 use git2::Repository;
 use regex::Regex;
 
-use crate::config;
+use crate::{config, log::Logger};
 
 pub struct Context {
     workspace_path: Option<String>,
-    debug: bool,
+    log: Logger,
 }
 
 impl Context {
@@ -26,8 +26,32 @@ impl Context {
 
         Ok(Self {
             workspace_path,
-            debug,
+            log: Logger::new(debug),
         })
+    }
+
+    pub fn error(&self, msg: &str) {
+        self.log.error(msg);
+    }
+
+    pub fn error_fmt(&self, msg: &str) {
+        self.log.error_fmt(msg);
+    }
+
+    pub fn info(&self, msg: &str) {
+        self.log.info(msg);
+    }
+
+    pub fn success(&self, msg: &str) {
+        self.log.success(msg);
+    }
+
+    pub fn success_fmt(&self, msg: &str) {
+        self.log.success_fmt(msg);
+    }
+
+    pub fn debug(&self, msg: &str) {
+        self.log.debug(msg);
     }
 
     pub fn repository(&self) -> Result<String> {
@@ -66,10 +90,6 @@ impl Context {
 
     pub fn workspace_path(&self) -> Option<String> {
         self.workspace_path.clone()
-    }
-
-    pub fn debug(&self) -> bool {
-        self.debug
     }
 }
 

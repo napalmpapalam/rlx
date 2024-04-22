@@ -1,16 +1,15 @@
-use std::{fs::File, path::Path};
+use std::{
+    fs::{self, File},
+    path::Path,
+};
+
+use colored::*;
 
 use clap::Args;
 use eyre::{eyre, Context as _Context, OptionExt, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    context::Context,
-    print::{
-        debug, error, info, print_checking_versions, print_invalid_package_version,
-        print_valid_package_version, success,
-    },
-};
+use crate::context::Context;
 
 pub struct PackageMetadata {
     version: String,
@@ -18,48 +17,73 @@ pub struct PackageMetadata {
 }
 
 #[derive(Clone, Args, Debug, Serialize, Deserialize)]
-/// Check that a release is sane (package.json, CHANGELOG.md, etc.)
 pub struct ReleaseSanityCheck {
-    /// The release version to check
+    /// The release version to check, if not provided, the not pushed git tag will be used.
+    /// If no git tag is found, the check will be skipped.
     version: Option<String>,
 }
 
 impl ReleaseSanityCheck {
     pub async fn run(&self, ctx: &Context) -> Result<()> {
-        print_checking_versions();
-
         let ver = self.get_release_version(ctx)?;
         if ver.is_none() {
-            info("No version tag found, skipping release sanity check...");
+            ctx.info("No version tag found, skipping release sanity check...");
             return Ok(());
         }
 
         let ver = ver.ok_or_eyre("Failed to get release version")?;
-        debug(ctx, format!("Release package version: {ver}").as_str());
-        debug(ctx, "Validating semver compatibility of release");
+        ctx.debug(format!("Release package version: {ver}").as_str());
+        ctx.debug("Validating semver compatibility of release");
 
-        if !self.validate_semver_compatibility(ver.clone())? {
+        if !self.validate_semver_compatibility(ctx, ver.clone())? {
             return Ok(());
         }
         if !self.validate_package_version(ctx, ver.clone())? {
-            error("Release package version check is failed");
+            ctx.error("Release package version check is failed");
             return Ok(());
         }
+        if !self.validate_change_log(ctx, ver.clone())? {
+            return Ok(());
+        }
+        ctx.success("Release changelog is valid");
 
         println!("Repository URL: {}", ctx.repository()?);
         Ok(())
     }
 
-    fn validate_semver_compatibility(&self, version: String) -> Result<bool> {
+    fn validate_change_log(&self, ctx: &Context, version: String) -> Result<bool> {
+        let raw = fs::read_to_string(Path::new("CHANGELOG.md"))
+            .wrap_err_with(|| "Failed to read raw changelog file")?;
+        let changelog =
+            parse_changelog::parse(&raw).wrap_err_with(|| "Failed to parse changelog file")?;
+
+        let mut latest_release = changelog[0].clone();
+        if latest_release.title.starts_with("[Unreleased]") {
+            latest_release = changelog[1].clone();
+        }
+
+        let today_ymd = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+        let expected_title = format!("[{version}] - {today_ymd}");
+
+        if latest_release.title != expected_title {
+            ctx.error(format!("\"## {expected_title}\" is absent in CHANGELOG.md").as_str());
+            return Ok(false);
+        }
+
+        Ok(true)
+    }
+
+    fn validate_semver_compatibility(&self, ctx: &Context, version: String) -> Result<bool> {
         let semver = semver::Version::parse(&version);
 
         match semver {
             Ok(_) => {
-                success("Release version is compatible with semantic versioning");
+                ctx.success("Release version is compatible with semantic versioning");
                 Ok(true)
             }
             Err(e) => {
-                error(
+                ctx.error(
                     format!("Release version is not compatible with semantic versioning: {e}")
                         .as_str(),
                 );
@@ -70,11 +94,11 @@ impl ReleaseSanityCheck {
 
     fn validate_package_version(&self, ctx: &Context, version: String) -> Result<bool> {
         if let Some(workspace_path) = ctx.workspace_path() {
-            debug(ctx, "Validating workspace package versions");
+            ctx.debug("Validating workspace package versions");
             return self.validate_workspace_package_versions(ctx, workspace_path, version);
         }
 
-        debug(ctx, "Validating single package version");
+        ctx.debug("Validating single package version");
         self.validate_single_package_version(ctx, version, None)
     }
 
@@ -117,8 +141,21 @@ impl ReleaseSanityCheck {
         let valid = release_version == version;
 
         match valid {
-            true => print_valid_package_version(name.clone()),
-            false => print_invalid_package_version(name.clone(), release_version.clone(), version),
+            true => ctx.success_fmt(&format!(
+                "{}{}{}",
+                "Release version of the ".green(),
+                name.clone().green().bold(),
+                " is valid".green()
+            )),
+            false => ctx.error_fmt(&format!(
+                "{}{}{}{}{}{}",
+                "Release version of the ".red(),
+                name.clone().red().bold(),
+                " is invalid, expected: ".red(),
+                release_version.clone().red().bold(),
+                ", actual: ".red(),
+                version.red().bold()
+            )),
         }
 
         Ok(valid)
@@ -127,10 +164,7 @@ impl ReleaseSanityCheck {
     fn get_package_metadata(&self, ctx: &Context, dir: Option<String>) -> Result<PackageMetadata> {
         let path = dir.unwrap_or(".".to_string()) + "/package.json";
 
-        debug(
-            ctx,
-            format!("Reading package.json file from path {path}").as_str(),
-        );
+        ctx.debug(format!("Reading package.json file from path {path}").as_str());
 
         let file = File::open(
             Path::new(path.as_str())
