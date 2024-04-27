@@ -30,7 +30,7 @@ pub fn is_empty_str_vec(val: Vec<String>) -> bool {
 /// Return the next text content
 pub fn get_text_content(tokens: &mut Vec<Token>) -> Result<Option<String>> {
     let mut lines: Vec<String> = vec![];
-    let token_types = vec![TokenKind::P, TokenKind::Li];
+    let token_types = [TokenKind::P, TokenKind::Li];
 
     while tokens.first().is_some() {
         let first = tokens.first().unwrap();

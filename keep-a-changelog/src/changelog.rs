@@ -94,7 +94,7 @@ impl Changelog {
         File::open(path)?
             .read_to_string(&mut markdown)
             .wrap_err_with(|| "Failed to read CHANGELOG.md")?;
-        Parser::new(markdown, opts)?.parse()
+        Parser::parse(markdown, opts)
     }
 
     pub fn find_release(&self, version: String) -> Result<Option<&Release>> {

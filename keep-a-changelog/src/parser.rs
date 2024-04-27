@@ -17,7 +17,7 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(markdown: String, opts: ChangeLogParseOptions) -> Result<Self> {
+    pub fn parse(markdown: String, opts: ChangeLogParseOptions) -> Result<Changelog> {
         let mut tokens = tokenize(markdown).wrap_err_with(|| "Failed to tokenize markdown")?;
         let mut builder = ChangelogBuilder::default();
 
@@ -32,18 +32,15 @@ impl Parser {
             builder.head(head);
         }
 
-        Ok(Self {
+        Self {
             builder: builder.clone(),
             tokens,
             opts,
-        })
-    }
-
-    pub fn parse(&mut self) -> Result<Changelog> {
-        self.parse_releases()?
-            .parse_links()?
-            .parse_footer()?
-            .build()
+        }
+        .parse_releases()?
+        .parse_links()?
+        .parse_footer()?
+        .build()
     }
 
     fn parse_releases(&mut self) -> Result<&mut Self> {
