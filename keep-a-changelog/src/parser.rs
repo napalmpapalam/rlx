@@ -13,6 +13,7 @@ pub struct Parser {
     builder: ChangelogBuilder,
     tokens: Vec<Token>,
     opts: ChangeLogParseOptions,
+    idx: usize,
 }
 
 impl Parser {
@@ -24,6 +25,7 @@ impl Parser {
             builder,
             tokens,
             opts,
+            idx: 0,
         }
         .parse_opts()?
         .parse_meta()?
@@ -146,8 +148,13 @@ impl Parser {
     }
 
     fn build(&self) -> Result<Changelog> {
-        if !self.tokens.is_empty() {
-            return Err(eyre!("Unexpected tokens: {:?}", self.tokens));
+        if self.idx != self.tokens.len() {
+            return Err(eyre!(
+                "Unexpected tokens: {:?}, index: {}, tokens length: {}",
+                self.tokens[self.idx..].to_vec(),
+                self.idx,
+                self.tokens.len(),
+            ));
         }
 
         self.builder
@@ -156,45 +163,38 @@ impl Parser {
     }
 
     fn get_content(&mut self, kinds: Vec<TokenKind>, required: bool) -> Result<Option<String>> {
-        let first = self.tokens.first();
+        let token = self.tokens.get(self.idx);
 
-        if first.is_none() || (first.is_some() && !kinds.iter().any(|k| *k == first.unwrap().kind))
-        {
+        if token.is_none() {
             if required {
-                return Err(eyre!(
-                    "Required token missing in: {:?}",
-                    self.tokens[0].line
-                ));
+                return Err(eyre!("Required token missing in line: {}", self.idx));
             }
             return Ok(None);
         }
 
-        let result = self.tokens.remove(0).content.join("\n");
-        if result.is_empty() {
+        let token = token.unwrap();
+
+        if !kinds.iter().any(|k| *k == token.kind) {
             if required {
-                return Err(eyre!(
-                    "Required token is empty in: {:?}",
-                    self.tokens[0].line
-                ));
+                return Err(eyre!("Required token kind missing in line: {}", self.idx));
             }
             return Ok(None);
         }
 
-        Ok(Some(result))
+        self.idx += 1;
+        Ok(Some(token.content.join("\n")))
     }
 
     fn get_text_content(&mut self) -> Result<Option<String>> {
         let mut lines: Vec<String> = vec![];
         let kinds = [TokenKind::P, TokenKind::Li];
 
-        while self.tokens.first().is_some() {
-            let first = self.tokens.first().unwrap();
-
-            if !kinds.iter().any(|tt| *tt == first.kind) {
+        while let Some(token) = self.tokens.get(self.idx) {
+            if !kinds.iter().any(|tt| *tt == token.kind) {
                 break;
             }
 
-            let token = self.tokens.remove(0);
+            self.idx += 1;
 
             if token.kind == TokenKind::Li {
                 lines.push(format!("- {}", token.content.join("\n")));
@@ -203,11 +203,10 @@ impl Parser {
             }
         }
 
-        let result = lines.join("\n");
-        if result.is_empty() {
+        if lines.is_empty() {
             return Ok(None);
         }
 
-        Ok(Some(result))
+        Ok(Some(lines.join("\n")))
     }
 }
