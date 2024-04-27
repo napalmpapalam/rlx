@@ -3,17 +3,26 @@ name = "rlx"
 version = "0.1.9"
 edition = "2021"
 
+[workspace]
+members = [".", "keep-a-changelog"]
+default-members = ["."]
+
 [dependencies]
+clap = { version = "4",  features = ["derive"] }
+config = { version = "0.14", default-features = false, features = ["yaml"] }
+tokio = { version = "1", default-features = false, features = ["full"] }
+
 eyre = "0.6"
 color-eyre = "0.6"
-regex = "1"
-clap = { version = "4",  features = ["derive"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { default-features = false, version = "1", features = ["full"] }
-config = { version = "0.14", default-features = false, features = ["yaml"] }
+
 colored = "2"
+regex = "1"
 git2 = "0.18"
 semver = "1"
-parse-changelog = "0.6"
 chrono = "0.4"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+clparse = { git = "https://github.com/napalmpapalam/clparse.git"}
+keep-a-changelog = { path = "keep-a-changelog" }

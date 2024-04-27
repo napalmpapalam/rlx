@@ -1,4 +1,4 @@
-## Changelog
+# Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -7,37 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [v0.1.9] - 2024-04-20
-- Fix post install
+### Fixed
+- post-install for the NPM package
 
 ## [v0.1.8] - 2024-04-20
-- Fix npm package version
+### Fixed
+- NPM package version
 
 ## [v0.1.7] - 2024-04-20
+### Changed
 - Revert CI Changes
 
 ## [v0.1.6] - 2024-04-20
+### Added
 - Simple command implementation for testing
 
 ## [v0.1.5] - 2024-04-20
-- Fix binary name
+### Fixed
+- Binary name
 
 ## [v0.1.4] - 2024-04-20
-- Fix CI
+### Fixed
+- GitHub Action
 
 ## [v0.1.3] - 2024-04-20
-- Fix run binary
-- Add publish npm
+### Added
+- Publish NPM
+
+### Fixed
+- Run binary
 
 ## [v0.1.2] - 2024-04-20
-- Revert GitHub Actions changes
-- Fix run binary
+### Changed
+- Revert GitHub Action changes
+
+### Fixed
+- Run binary
 
 ## [v0.1.1] - 2024-04-20
-- Played with GitHub Actions
+### Changed
+- GitHub Actions
 
 ## [v0.1.0] - 2024-04-20
 - Initial release
-
 
 [Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.1.9...HEAD
 [v0.1.9]: https://github.com/napalmpapalam/rlx/compare/rust_v0.1.8...rust_v0.1.9
