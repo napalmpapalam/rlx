@@ -203,7 +203,7 @@ impl Display for Changelog {
             writeln!(f, "<!-- ${flag} -->")?;
         }
 
-        let title = self.title.clone().unwrap_or(CHANGELOG_TITLE.into());
+        let title = self.title.clone().unwrap_or_else(|| CHANGELOG_TITLE.into());
         writeln!(f, "# {title}",)?;
 
         let description = match self.description.clone() {

@@ -1,4 +1,4 @@
-use eyre::{eyre, Context, Result};
+use eyre::{bail, Context, Result};
 use regex::Regex;
 use semver::Version;
 
@@ -62,58 +62,43 @@ impl Parser {
 
     fn parse_releases(&mut self) -> Result<&mut Self> {
         let mut releases: Vec<Release> = vec![];
-        let mut release = self.get_content(vec![TokenKind::H2], false)?;
         let unreleased_regex = Regex::new(r"\[?([^\]]+)\]?\s*-\s*unreleased(\s+\[yanked\])?$")?;
         let release_regex =
             Regex::new(r"\[?([^\]]+)\]?\s*-\s*([\d]{4}-[\d]{1,2}-[\d]{1,2})(\s+\[yanked\])?$")?;
 
-        while release.is_some() {
-            let rel = release.clone().unwrap().to_lowercase();
-            let captures = release_regex.captures(&rel);
-            let mut release_builder = ReleaseBuilder::default();
+        while let Some(release) = self.get_content(vec![TokenKind::H2], false)? {
+            let mut builder = ReleaseBuilder::default();
+            let release = release.clone().to_lowercase();
 
-            if captures.is_some() {
-                let captures = captures.unwrap();
-                let version = captures.get(1).unwrap().clone().as_str();
-                let version = Version::parse(version)
-                    .wrap_err_with(|| format!("Failed to parse version: {version}"))?;
-                let date = captures.get(2).unwrap().clone().as_str();
-                let date = chrono::NaiveDate::parse_from_str(date, "%Y-%m-%d")
-                    .wrap_err_with(|| format!("Failed to parse date: {date}"))?;
-                let yanked = captures.get(3).clone().is_some();
+            builder.yanked(release.contains("[yanked]"));
 
-                release_builder.version(version).date(date).yanked(yanked);
-            } else if rel.contains("unreleased") {
-                release_builder.yanked(rel.contains("[yanked]"));
-                let captures = unreleased_regex.captures(&rel);
+            if let Some(captures) = release_regex.captures(&release) {
+                let version =
+                    Version::parse(&captures[1]).wrap_err_with(|| "Failed to parse version")?;
 
-                if let Some(captures) = captures {
-                    let version = Version::parse(captures.get(1).unwrap().as_str())?;
-                    release_builder.version(version);
+                let date = chrono::NaiveDate::parse_from_str(&captures[2], "%Y-%m-%d")
+                    .wrap_err_with(|| "Failed to parse date")?;
+
+                builder.version(version).date(date);
+            } else if release.contains("unreleased") {
+                if let Some(captures) = unreleased_regex.captures(&release) {
+                    builder.version(Version::parse(&captures[1])?);
                 }
             } else {
-                return Err(eyre!("Failed to parse release: {:?}", rel));
+                bail!("Failed to parse release: {:?}", release)
             }
 
-            release_builder.description(self.get_text_content()?);
+            builder.description(self.get_text_content()?);
 
-            let mut change_type = self.get_content(vec![TokenKind::H3], false)?;
+            while let Some(change_kind) = self.get_content(vec![TokenKind::H3], false)? {
+                let change_kind = change_kind.to_lowercase();
 
-            while change_type.is_some() {
-                let c_type = change_type.clone().unwrap().to_lowercase();
-
-                let mut change = self.get_content(vec![TokenKind::Li], false)?;
-
-                while change.is_some() {
-                    release_builder.add_change(c_type.clone(), change.clone().unwrap())?;
-                    change = self.get_content(vec![TokenKind::Li], false)?;
+                while let Some(change) = self.get_content(vec![TokenKind::Li], false)? {
+                    builder.add_change(change_kind.clone(), change)?;
                 }
-
-                change_type = self.get_content(vec![TokenKind::H3], false)?;
             }
 
-            releases.push(release_builder.build()?);
-            release = self.get_content(vec![TokenKind::H2], false)?;
+            releases.push(builder.build()?);
         }
 
         self.builder.releases(releases);
@@ -149,12 +134,12 @@ impl Parser {
 
     fn build(&self) -> Result<Changelog> {
         if self.idx != self.tokens.len() {
-            return Err(eyre!(
+            bail!(
                 "Unexpected tokens: {:?}, index: {}, tokens length: {}",
                 self.tokens[self.idx..].to_vec(),
                 self.idx,
                 self.tokens.len(),
-            ));
+            );
         }
 
         self.builder
@@ -167,7 +152,7 @@ impl Parser {
 
         if token.is_none() {
             if required {
-                return Err(eyre!("Required token missing in line: {}", self.idx));
+                bail!("Required token missing in line: {}", self.idx);
             }
             return Ok(None);
         }
@@ -176,7 +161,7 @@ impl Parser {
 
         if !kinds.iter().any(|k| *k == token.kind) {
             if required {
-                return Err(eyre!("Required token kind missing in line: {}", self.idx));
+                bail!("Required token kind missing in line: {}", self.idx);
             }
             return Ok(None);
         }

@@ -47,9 +47,9 @@ pub fn tokenize(markdown: String) -> Result<Vec<Token>> {
             content,
         } = token;
         let content = content[0].clone();
-        let prev_item_idx = result.len() - 1_usize;
+        let prev_item_idx = result.len() - 1;
 
-        if idx > 0_usize {
+        if idx > 0 {
             let prev_token_kind = result[prev_item_idx].kind.clone();
 
             if kind == TokenKind::P {
@@ -74,7 +74,7 @@ pub fn tokenize(markdown: String) -> Result<Vec<Token>> {
         .into_iter()
         .filter(|t| !is_empty_str_vec(t.content.clone()))
         .map(|mut token| {
-            while is_empty_str(token.content[token.content.len() - 1_usize].clone()) {
+            while is_empty_str(token.content[token.content.len() - 1].clone()) {
                 token.content.pop();
             }
 
@@ -101,7 +101,7 @@ fn extract_tokens(markdown: String) -> Vec<Token> {
         .into_iter()
         .enumerate()
         .filter_map(|(idx, line)| {
-            let ln = idx + 1_usize;
+            let ln = idx + 1;
             let mut line = line.to_string();
 
             if empty_next_line {
@@ -138,7 +138,7 @@ fn extract_tokens(markdown: String) -> Vec<Token> {
             }
 
             if link_ref_regex.is_match(&line) {
-                let next_line = lines.get(idx + 1_usize);
+                let next_line = lines.get(idx + 1);
 
                 if let Some(next_line) = next_line {
                     if link_prefix_regex.is_match(next_line) {

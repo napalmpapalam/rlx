@@ -239,7 +239,7 @@ impl ReleaseSanityCheck {
     }
 
     fn get_package_metadata(&self, ctx: &Context, dir: Option<String>) -> Result<PackageMetadata> {
-        let path = dir.unwrap_or(".".to_string()) + "/package.json";
+        let path = dir.unwrap_or_else(|| ".".to_string()) + "/package.json";
 
         ctx.debug(format!("Reading package.json file from path {path}").as_str());
 

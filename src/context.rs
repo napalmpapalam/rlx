@@ -1,7 +1,7 @@
 use std::{fs::File, io::Read, path::Path, process::Command};
 
 use clparse::{changelog::Changelog, ChangelogParser};
-use eyre::{eyre, Context as _Context, OptionExt, Result};
+use eyre::{bail, eyre, Context as _Context, OptionExt, Result};
 use git2::Repository;
 use keep_a_changelog::{changelog::ChangeLogParseOptions, Changelog as MyChangelog};
 use regex::Regex;
@@ -126,7 +126,7 @@ fn get_git_tag() -> Result<Option<String>> {
         .output()?;
 
     if !output.status.success() {
-        return Err(eyre!("Git command executed with failing error code"));
+        bail!("Git command executed with failing error code");
     }
 
     let refs_report = String::from_utf8_lossy(&output.stdout);
