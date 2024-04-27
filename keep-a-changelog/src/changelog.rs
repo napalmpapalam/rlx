@@ -7,16 +7,16 @@ use std::{
 
 use derive_builder::Builder;
 use derive_getters::Getters;
-use eyre::{eyre, Context, OptionExt, Result};
+use eyre::{Context, OptionExt, Result};
 use regex::Regex;
 use semver::Version;
 
 use crate::{
     consts::{CHANGELOG_DESCRIPTION, CHANGELOG_TITLE},
     link::Link,
-    release::{Release, ReleaseBuilder},
-    token::{tokenize, Token, TokenKind},
-    utils::{get_content, get_git_compare_url, get_git_release_url, get_text_content},
+    parser::Parser,
+    release::Release,
+    utils::{get_git_compare_url, get_git_release_url},
 };
 
 #[derive(Debug, Clone, Builder, Getters)]
@@ -33,9 +33,9 @@ pub struct Changelog {
     footer: Option<String>,
     #[builder(setter(into), default)]
     url: Option<String>,
-    #[builder(setter(custom), default)]
+    #[builder(setter(custom), public, default)]
     releases: Vec<Release>,
-    #[builder(setter(custom), default)]
+    #[builder(setter(custom), public, default)]
     links: Vec<Link>,
     #[builder(setter(into), default)]
     tag_prefix: Option<String>,
@@ -46,7 +46,7 @@ impl ChangelogBuilder {
         "HEAD".into()
     }
 
-    fn releases(&mut self, releases: Vec<Release>) -> &mut Self {
+    pub fn releases(&mut self, releases: Vec<Release>) -> &mut Self {
         self.releases = Some(releases);
         self.sort_releases()
     }
@@ -69,7 +69,7 @@ impl ChangelogBuilder {
         self
     }
 
-    fn links(&mut self, links: Vec<String>) -> Result<&mut Self> {
+    pub fn links(&mut self, links: Vec<String>) -> Result<&mut Self> {
         let links = links
             .iter()
             .map(|link| Link::parse(link.clone()))
@@ -94,8 +94,7 @@ impl Changelog {
         File::open(path)?
             .read_to_string(&mut markdown)
             .wrap_err_with(|| "Failed to read CHANGELOG.md")?;
-        let tokens = tokenize(markdown).wrap_err_with(|| "Failed to tokenize markdown")?;
-        process_tokens(tokens, opts)
+        Parser::new(markdown, opts)?.parse()
     }
 
     pub fn find_release(&self, version: String) -> Result<Option<&Release>> {
@@ -107,6 +106,17 @@ impl Changelog {
             .releases()
             .iter()
             .find(|r| r.version() == &Some(version.clone())))
+    }
+
+    pub fn get_unreleased(&self) -> Option<&Release> {
+        self.releases()
+            .iter()
+            .find(|r| r.version().is_none() && r.date().is_none())
+    }
+
+    pub fn add_release(&mut self, release: Release) -> &mut Self {
+        self.releases.insert(0, release);
+        self.sort_releases()
     }
 
     pub fn sort_releases(&mut self) -> &mut Self {
@@ -123,11 +133,6 @@ impl Changelog {
         }
 
         self
-    }
-
-    pub fn add_release(&mut self, release: Release) -> &mut Self {
-        self.releases.insert(0, release);
-        self.sort_releases()
     }
 
     pub(crate) fn compare_link(
@@ -190,105 +195,6 @@ impl Changelog {
         }
         version.to_string()
     }
-}
-
-fn process_tokens(tokens: Vec<Token>, opts: ChangeLogParseOptions) -> Result<Changelog> {
-    let release_link_regex = Regex::new(r"^\[.*\]\:\s*(http.*?)\/(?:-\/)?compare\/.*$")?;
-    let unreleased_regex = Regex::new(r"\[?([^\]]+)\]?\s*-\s*unreleased(\s+\[yanked\])?$")?;
-    let release_regex =
-        Regex::new(r"\[?([^\]]+)\]?\s*-\s*([\d]{4}-[\d]{1,2}-[\d]{1,2})(\s+\[yanked\])?$")?;
-
-    let mut tokens = tokens;
-    let mut builder = ChangelogBuilder::default();
-
-    builder
-        .flag(get_content(&mut tokens, vec![TokenKind::Flag], false)?)
-        .title(get_content(&mut tokens, vec![TokenKind::H1], true)?)
-        .description(get_text_content(&mut tokens)?)
-        .url(opts.url.clone())
-        .tag_prefix(opts.tag_prefix.clone());
-
-    if let Some(head) = opts.head {
-        builder.head(head);
-    }
-
-    let mut releases: Vec<Release> = vec![];
-    let mut release = get_content(&mut tokens, vec![TokenKind::H2], false)?;
-
-    while release.is_some() {
-        let rel = release.clone().unwrap().to_lowercase();
-        let captures = release_regex.captures(&rel);
-        let mut release_builder = ReleaseBuilder::default();
-
-        if captures.is_some() {
-            let captures = captures.unwrap();
-            let version = captures.get(1).unwrap().clone().as_str();
-            let version = Version::parse(version)
-                .wrap_err_with(|| format!("Failed to parse version: {version}"))?;
-            let date = captures.get(2).unwrap().clone().as_str();
-            let date = chrono::NaiveDate::parse_from_str(date, "%Y-%m-%d")
-                .wrap_err_with(|| format!("Failed to parse date: {date}"))?;
-            let yanked = captures.get(3).clone().is_some();
-
-            release_builder.version(version).date(date).yanked(yanked);
-        } else if rel.contains("unreleased") {
-            release_builder.yanked(rel.contains("[yanked]"));
-            let captures = unreleased_regex.captures(&rel);
-
-            if let Some(captures) = captures {
-                let version = Version::parse(captures.get(1).unwrap().as_str())?;
-                release_builder.version(version);
-            }
-        } else {
-            return Err(eyre!("Failed to parse release: {:?}", rel));
-        }
-
-        release_builder.description(get_text_content(&mut tokens)?);
-
-        let mut change_type = get_content(&mut tokens, vec![TokenKind::H3], false)?;
-
-        while change_type.is_some() {
-            let c_type = change_type.clone().unwrap().to_lowercase();
-
-            let mut change = get_content(&mut tokens, vec![TokenKind::Li], false)?;
-
-            while change.is_some() {
-                release_builder.add_change(c_type.clone(), change.clone().unwrap())?;
-                change = get_content(&mut tokens, vec![TokenKind::Li], false)?;
-            }
-
-            change_type = get_content(&mut tokens, vec![TokenKind::H3], false)?;
-        }
-
-        releases.push(release_builder.build()?);
-        release = get_content(&mut tokens, vec![TokenKind::H2], false)?;
-    }
-
-    builder.releases(releases);
-
-    let mut links = vec![];
-
-    while let Some(link) = get_content(&mut tokens, vec![TokenKind::Link], false)? {
-        links.push(link.clone());
-
-        if opts.url.is_some() {
-            continue;
-        }
-        if let Some(captures) = release_link_regex.captures(&link) {
-            builder.url(Some(captures[1].to_string()));
-        }
-    }
-
-    builder.links(links)?;
-    builder.footer(get_content(&mut tokens, vec![TokenKind::Hr], false)?);
-
-    if !tokens.is_empty() {
-        return Err(eyre!("Unexpected tokens: {:?}", tokens));
-    }
-
-    builder
-        .build()
-        .wrap_err_with(|| "Failed to build Changelog")
 }
 
 impl Display for Changelog {

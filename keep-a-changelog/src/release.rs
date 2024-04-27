@@ -43,7 +43,7 @@ impl ReleaseBuilder {
 }
 
 impl Release {
-    pub(crate) fn compare_link(&self, changelog: &Changelog) -> Result<Option<Link>> {
+    pub fn compare_link(&self, changelog: &Changelog) -> Result<Option<Link>> {
         let index = changelog
             .releases()
             .iter()
