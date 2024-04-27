@@ -6,7 +6,6 @@ use crate::{
     changelog::ChangelogBuilder,
     release::{Release, ReleaseBuilder},
     token::{tokenize, Token, TokenKind},
-    utils::{get_content, get_text_content},
     ChangeLogParseOptions, Changelog,
 };
 
@@ -18,34 +17,50 @@ pub struct Parser {
 
 impl Parser {
     pub fn parse(markdown: String, opts: ChangeLogParseOptions) -> Result<Changelog> {
-        let mut tokens = tokenize(markdown).wrap_err_with(|| "Failed to tokenize markdown")?;
-        let mut builder = ChangelogBuilder::default();
-
-        builder
-            .flag(get_content(&mut tokens, vec![TokenKind::Flag], false)?)
-            .title(get_content(&mut tokens, vec![TokenKind::H1], true)?)
-            .description(get_text_content(&mut tokens)?)
-            .url(opts.url.clone())
-            .tag_prefix(opts.tag_prefix.clone());
-
-        if let Some(head) = opts.head.clone() {
-            builder.head(head);
-        }
+        let tokens = tokenize(markdown).wrap_err_with(|| "Failed to tokenize markdown")?;
+        let builder = ChangelogBuilder::default();
 
         Self {
-            builder: builder.clone(),
+            builder,
             tokens,
             opts,
         }
+        .parse_opts()?
+        .parse_meta()?
         .parse_releases()?
         .parse_links()?
         .parse_footer()?
         .build()
     }
 
+    fn parse_opts(&mut self) -> Result<&mut Self> {
+        self.builder
+            .url(self.opts.url.clone())
+            .tag_prefix(self.opts.tag_prefix.clone());
+
+        if let Some(head) = self.opts.head.clone() {
+            self.builder.head(head);
+        }
+
+        Ok(self)
+    }
+
+    fn parse_meta(&mut self) -> Result<&mut Self> {
+        let flag = self.get_content(vec![TokenKind::Flag], false)?;
+        let title = self.get_content(vec![TokenKind::H1], true)?;
+        let description = self.get_text_content()?;
+
+        self.builder
+            .flag(flag)
+            .title(title)
+            .description(description);
+
+        Ok(self)
+    }
+
     fn parse_releases(&mut self) -> Result<&mut Self> {
         let mut releases: Vec<Release> = vec![];
-        let mut release = get_content(&mut self.tokens, vec![TokenKind::H2], false)?;
+        let mut release = self.get_content(vec![TokenKind::H2], false)?;
         let unreleased_regex = Regex::new(r"\[?([^\]]+)\]?\s*-\s*unreleased(\s+\[yanked\])?$")?;
         let release_regex =
             Regex::new(r"\[?([^\]]+)\]?\s*-\s*([\d]{4}-[\d]{1,2}-[\d]{1,2})(\s+\[yanked\])?$")?;
@@ -78,25 +93,25 @@ impl Parser {
                 return Err(eyre!("Failed to parse release: {:?}", rel));
             }
 
-            release_builder.description(get_text_content(&mut self.tokens)?);
+            release_builder.description(self.get_text_content()?);
 
-            let mut change_type = get_content(&mut self.tokens, vec![TokenKind::H3], false)?;
+            let mut change_type = self.get_content(vec![TokenKind::H3], false)?;
 
             while change_type.is_some() {
                 let c_type = change_type.clone().unwrap().to_lowercase();
 
-                let mut change = get_content(&mut self.tokens, vec![TokenKind::Li], false)?;
+                let mut change = self.get_content(vec![TokenKind::Li], false)?;
 
                 while change.is_some() {
                     release_builder.add_change(c_type.clone(), change.clone().unwrap())?;
-                    change = get_content(&mut self.tokens, vec![TokenKind::Li], false)?;
+                    change = self.get_content(vec![TokenKind::Li], false)?;
                 }
 
-                change_type = get_content(&mut self.tokens, vec![TokenKind::H3], false)?;
+                change_type = self.get_content(vec![TokenKind::H3], false)?;
             }
 
             releases.push(release_builder.build()?);
-            release = get_content(&mut self.tokens, vec![TokenKind::H2], false)?;
+            release = self.get_content(vec![TokenKind::H2], false)?;
         }
 
         self.builder.releases(releases);
@@ -109,7 +124,7 @@ impl Parser {
 
         let mut links = vec![];
 
-        while let Some(link) = get_content(&mut self.tokens, vec![TokenKind::Link], false)? {
+        while let Some(link) = self.get_content(vec![TokenKind::Link], false)? {
             links.push(link.clone());
 
             if self.opts.url.is_some() {
@@ -125,8 +140,8 @@ impl Parser {
     }
 
     fn parse_footer(&mut self) -> Result<&mut Self> {
-        self.builder
-            .footer(get_content(&mut self.tokens, vec![TokenKind::Hr], false)?);
+        let footer = self.get_content(vec![TokenKind::Hr], false)?;
+        self.builder.footer(footer);
         Ok(self)
     }
 
@@ -138,5 +153,61 @@ impl Parser {
         self.builder
             .build()
             .wrap_err_with(|| "Failed to build Changelog")
+    }
+
+    fn get_content(&mut self, kinds: Vec<TokenKind>, required: bool) -> Result<Option<String>> {
+        let first = self.tokens.first();
+
+        if first.is_none() || (first.is_some() && !kinds.iter().any(|k| *k == first.unwrap().kind))
+        {
+            if required {
+                return Err(eyre!(
+                    "Required token missing in: {:?}",
+                    self.tokens[0].line
+                ));
+            }
+            return Ok(None);
+        }
+
+        let result = self.tokens.remove(0).content.join("\n");
+        if result.is_empty() {
+            if required {
+                return Err(eyre!(
+                    "Required token is empty in: {:?}",
+                    self.tokens[0].line
+                ));
+            }
+            return Ok(None);
+        }
+
+        Ok(Some(result))
+    }
+
+    fn get_text_content(&mut self) -> Result<Option<String>> {
+        let mut lines: Vec<String> = vec![];
+        let kinds = [TokenKind::P, TokenKind::Li];
+
+        while self.tokens.first().is_some() {
+            let first = self.tokens.first().unwrap();
+
+            if !kinds.iter().any(|tt| *tt == first.kind) {
+                break;
+            }
+
+            let token = self.tokens.remove(0);
+
+            if token.kind == TokenKind::Li {
+                lines.push(format!("- {}", token.content.join("\n")));
+            } else {
+                lines.push(token.content.join("\n"));
+            }
+        }
+
+        let result = lines.join("\n");
+        if result.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some(result))
     }
 }

@@ -16,7 +16,7 @@ use crate::{
     link::Link,
     parser::Parser,
     release::Release,
-    utils::{get_git_compare_url, get_git_release_url},
+    utils::{get_compare_url, get_release_url},
 };
 
 #[derive(Debug, Clone, Builder, Getters)]
@@ -150,7 +150,7 @@ impl Changelog {
                 .to_string();
             return Ok(Some(Link {
                 anchor: version.clone(),
-                url: get_git_release_url(repo_url, self.tag_name(version)),
+                url: get_release_url(repo_url, self.tag_name(version)),
             }));
         }
 
@@ -164,7 +164,7 @@ impl Changelog {
                 .to_string();
             return Ok(Some(Link {
                 anchor: "Unreleased".into(),
-                url: get_git_compare_url(repo_url, self.tag_name(version), self.head().clone()),
+                url: get_compare_url(repo_url, self.tag_name(version), self.head().clone()),
             }));
         }
 
@@ -181,7 +181,7 @@ impl Changelog {
 
         Ok(Some(Link {
             anchor: current_version.clone(),
-            url: get_git_compare_url(
+            url: get_compare_url(
                 repo_url,
                 self.tag_name(previous_version),
                 self.tag_name(current_version),
