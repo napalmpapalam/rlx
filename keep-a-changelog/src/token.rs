@@ -36,9 +36,9 @@ impl Token {
 }
 
 pub fn tokenize(markdown: String) -> Result<Vec<Token>> {
-    let tokens: Vec<Token> = initial_tokenize(markdown.clone());
-    let mut result: Vec<Token> = vec![];
+    let tokens: Vec<Token> = extract_tokens(markdown);
     let regex = Regex::new(r"^\s\s")?;
+    let mut result: Vec<Token> = vec![];
 
     for (idx, token) in tokens.into_iter().enumerate() {
         let Token {
@@ -87,7 +87,7 @@ pub fn tokenize(markdown: String) -> Result<Vec<Token>> {
         .collect())
 }
 
-fn initial_tokenize(markdown: String) -> Vec<Token> {
+fn extract_tokens(markdown: String) -> Vec<Token> {
     let link_regex: Regex = Regex::new(r"^\[.*\]\:\s*http.*$").unwrap();
     let link_ref_regex: Regex = Regex::new(r"^\[.*\]\:$").unwrap();
     let comment_regex: Regex = Regex::new(r"^<!--(.*)-->$").unwrap();
@@ -151,12 +151,7 @@ fn initial_tokenize(markdown: String) -> Vec<Token> {
             }
 
             if let Some(captures) = comment_regex.captures(&line) {
-                let line = captures
-                    .get(1)
-                    .expect("Capture should exist")
-                    .as_str()
-                    .trim()
-                    .to_string();
+                let line = captures[1].trim().to_string();
                 return Some(Token::new(ln, TokenKind::Flag, vec![line]));
             }
 

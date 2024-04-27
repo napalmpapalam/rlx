@@ -90,8 +90,9 @@ impl Display for Release {
             let date = self
                 .date
                 .ok_or_eyre(format!("Missing date: {version}"))
-                .map_err(|_| std::fmt::Error)?;
-            let date = date.format("%Y-%m-%d").to_string();
+                .map_err(|_| std::fmt::Error)?
+                .format("%Y-%m-%d")
+                .to_string();
             writeln!(f, "## [{version}] - {date}{yanked}")?;
         } else {
             writeln!(f, "## [Unreleased]{yanked}")?;

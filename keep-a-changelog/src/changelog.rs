@@ -84,6 +84,7 @@ impl ChangelogBuilder {
 pub struct ChangeLogParseOptions {
     pub url: Option<String>,
     pub tag_prefix: Option<String>,
+    pub head: Option<String>,
 }
 
 impl Changelog {
@@ -207,6 +208,10 @@ fn process_tokens(tokens: Vec<Token>, opts: ChangeLogParseOptions) -> Result<Cha
         .url(opts.url.clone())
         .tag_prefix(opts.tag_prefix.clone());
 
+    if let Some(head) = opts.head {
+        builder.head(head);
+    }
+
     let mut releases: Vec<Release> = vec![];
     let mut release = get_content(&mut tokens, vec![TokenKind::H2], false)?;
 
@@ -295,47 +300,47 @@ impl Display for Changelog {
         let title = self.title.clone().unwrap_or(CHANGELOG_TITLE.into());
         writeln!(f, "# {title}",)?;
 
-        if let Some(description) = self.description.clone() {
-            writeln!(f, "{}", description.trim().to_owned())?;
-        } else {
-            write!(f, "{CHANGELOG_DESCRIPTION}")?;
-        }
+        let description = match self.description.clone() {
+            Some(description) => description.trim().to_owned(),
+            None => CHANGELOG_DESCRIPTION.into(),
+        };
 
-        let mut compare_links: Vec<Option<Link>> = vec![];
+        writeln!(f, "{description}")?;
 
-        for release in self.releases.iter() {
-            compare_links.push(
-                release
-                    .compare_link(self)
-                    .wrap_err_with(|| "Failed to get compare link")
-                    .map_err(|_| std::fmt::Error)?,
-            );
-            write!(f, "\n{release}")?;
-        }
+        self.releases()
+            .iter()
+            .try_for_each(|release| write!(f, "\n{release}"))?;
 
         writeln!(f)?;
 
         let tag_regex = Regex::new(r"\d+\.\d+\.\d+((-rc|-x)\.\d+)?").unwrap();
 
-        let non_compare_links: Vec<&Link> = self
-            .links
+        let mut is_non_compare_links = false;
+
+        self.links
             .iter()
             .filter(|link| {
                 !tag_regex.is_match(link.anchor()) && !link.anchor().contains("Unreleased")
             })
-            .collect();
+            .try_for_each(|link| {
+                if !is_non_compare_links {
+                    is_non_compare_links = true;
+                }
 
-        non_compare_links
-            .iter()
-            .try_for_each(|link| write!(f, "\n{link}"))?;
+                write!(f, "\n{link}")
+            })?;
 
-        if !non_compare_links.is_empty() {
+        if is_non_compare_links {
             writeln!(f)?;
         }
 
-        compare_links
-            .into_iter()
-            .flatten()
+        self.releases
+            .iter()
+            .filter_map(|release| {
+                release
+                    .compare_link(self)
+                    .expect("Failed to get compare link")
+            })
             .try_for_each(|link| write!(f, "\n{link}"))?;
 
         if let Some(footer) = self.footer.clone() {
