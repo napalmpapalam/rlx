@@ -14,12 +14,20 @@ pub enum Commands {
     /// valid for the release)
     #[command(name = "rsc")]
     ReleaseSanityCheck(rsc::ReleaseSanityCheck),
+    /// Change Log commands, used to parse and manipulate changelog
+    #[command(alias = "cl")]
+    ChangeLog {
+        #[command(subcommand)]
+        #[serde(flatten)]
+        cmd: changelog::ChangeLog,
+    },
 }
 
 impl Commands {
     pub async fn run(self, context: &Context) -> Result<()> {
         match self {
             Commands::ReleaseSanityCheck(cmd) => cmd.run(context).await,
+            Commands::ChangeLog { cmd } => cmd.run(context).await,
         }
     }
 }

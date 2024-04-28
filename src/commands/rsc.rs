@@ -4,6 +4,7 @@ use colored::*;
 
 use clap::Args;
 use eyre::{eyre, Context as _Context, OptionExt, Result};
+use keep_a_changelog::{Changelog, ChangelogParseOptions};
 use serde::{Deserialize, Serialize};
 
 use crate::context::Context;
@@ -18,11 +19,19 @@ pub struct ReleaseSanityCheck {
     /// The release version to check, if not provided, the not pushed git tag will be used.
     /// If no git tag is found, the check will be skipped.
     version: Option<String>,
+    /// The prefix of the git tags to use for the changelog link validation.
+    /// If not provided, the default value will be empty.
+    #[arg(short, long)]
+    tag_prefix: Option<String>,
+    /// The git ref to use as the head for the changelog link validation.
+    /// If not provided, the default value will be `HEAD`.
+    #[arg(short, long)]
+    head: Option<String>,
 }
 
 impl ReleaseSanityCheck {
     pub async fn run(&self, ctx: &Context) -> Result<()> {
-        let ver = self.get_release_version(ctx);
+        let ver = self.get_release_version(ctx)?;
         if ver.is_none() {
             ctx.info("No version tag found, skipping release sanity check...");
             return Ok(());
@@ -51,90 +60,91 @@ impl ReleaseSanityCheck {
         let today_ymd = chrono::Local::now().format("%Y-%m-%d").to_string();
         let expected_title = format!("[{version}] - {today_ymd}");
         let err_msg = format!("\"## {expected_title}\" is absent in CHANGELOG.md");
+        let repo_url = ctx.repository_url()?.to_owned();
 
         ctx.debug("Validating changelog");
 
-        let latest_release = ctx
-            .changelog()
-            .releases()
-            .iter()
-            .find(|r| r.version().as_ref().map(|v| v.to_string()) == Some(version.clone()));
-        if latest_release.is_none() {
-            ctx.debug("Latest release not found in changelog");
-            let link = "link here";
-            ctx.error(format!("{err_msg} or \"{link}\" is absent in CHANGELOG.md").as_str());
-            return Ok(false);
-        }
-        let latest_release = latest_release.expect("Failed to get latest release");
+        let changelog = Changelog::parse_from_file(
+            "CHANGELOG.md",
+            Some(ChangelogParseOptions {
+                url: Some(repo_url.clone()),
+                tag_prefix: self.tag_prefix.clone(),
+                head: self.head.clone(),
+            }),
+        )?;
 
-        let ver = latest_release.version().as_ref().map(|v| v.to_string());
-        if ver.is_none() {
-            ctx.debug("Version not found in latest release");
+        let latest = changelog.releases().iter().find(|r| r.version().is_some());
+        if latest.is_none() {
+            ctx.debug("Latest release not found in changelog");
             ctx.error(err_msg.as_str());
             return Ok(false);
         }
-        let ver = ver.expect("Failed to get latest release version");
+        let latest = latest.ok_or_eyre("Failed to get latest release")?;
+        let latest_version = latest
+            .version()
+            .as_ref()
+            .map(|v| v.to_string())
+            .ok_or_eyre("Failed to get latest release version")?;
 
-        ctx.debug(format!("Latest release version: {ver}").as_str());
+        ctx.debug(format!("Latest release version: {latest_version}").as_str());
 
-        if ver != version {
+        if latest_version != version {
             ctx.debug("Latest release version is not equal to the release version");
             ctx.error(err_msg.as_str());
             return Ok(false);
         }
 
-        let date = latest_release.date();
-        if date.is_none() {
+        let latest_date = latest.date();
+        if latest_date.is_none() {
             ctx.debug("Date not found in latest release");
             ctx.error(err_msg.as_str());
             return Ok(false);
         }
-        let date = date
-            .expect("Failed to get latest release date")
-            .format("%Y-%m-%d")
-            .to_string();
 
-        ctx.debug(format!("Latest release date: {date}").as_str());
+        let latest_date = latest_date.ok_or_eyre("Failed to get latest release date")?;
+        let latest_date = latest_date.format("%Y-%m-%d").to_string();
 
-        if date != today_ymd {
+        ctx.debug(format!("Latest release date: {latest_date}").as_str());
+
+        if latest_date != today_ymd {
             ctx.debug("Latest release date is not equal to today's date");
             ctx.error(err_msg.as_str());
             return Ok(false);
         }
 
-        let releases: Vec<String> = ctx
-            .changelog()
-            .releases()
+        let links = changelog
+            .links()
             .iter()
-            .filter(|r| r.version().is_some())
-            .map(|r| {
-                r.version()
-                    .clone()
-                    .expect("version should be present")
-                    .to_string()
-            })
-            .collect();
+            .filter(|l| l.url().contains(&repo_url))
+            .collect::<Vec<_>>();
 
-        let repo_url = ctx.repository_url();
-        let unreleased_url = get_git_compare_url(&repo_url, version.clone(), "HEAD".to_owned());
-        let mut anchors = vec![fmt_anchor("Unreleased", unreleased_url.clone())];
+        let mut anchors = vec![];
+        let mut invalid_anchors = false;
 
-        let mut invalid_anchors = !ctx.changelog_raw().contains(&unreleased_url);
+        for release in changelog.releases() {
+            let link = release
+                .compare_link(&changelog)?
+                .ok_or_eyre("Failed to get compare link")?;
 
-        for (i, ver) in releases.iter().enumerate() {
-            if i == releases.len() - 1 {
-                let link = get_git_release_url(repo_url.clone(), ver.clone());
-                if !ctx.changelog_raw().contains(&link) {
-                    invalid_anchors = true
-                }
-                anchors.push(fmt_anchor(ver, link));
+            let release_version = release.version();
+
+            if let Some(version) = release_version {
+                anchors.push(fmt_anchor(&version.to_string(), link.url.clone()));
             } else {
-                let previous = releases[i + 1_usize].clone();
-                let link = get_git_compare_url(&repo_url, previous, ver.clone());
-                if !ctx.changelog_raw().contains(&link) {
-                    invalid_anchors = true
-                }
-                anchors.push(fmt_anchor(ver, link));
+                anchors.push(fmt_anchor("Unreleased", link.url.clone()));
+            }
+
+            if !invalid_anchors {
+                invalid_anchors = !links.iter().any(|l| {
+                    let url_match = *l.url() == link.url;
+                    let anchor = l.anchor();
+                    let anchor_match = match release_version {
+                        Some(version) => l.anchor() == &version.to_string(),
+                        None => anchor == "Unreleased",
+                    };
+
+                    url_match && anchor_match
+                });
             }
         }
 
@@ -264,23 +274,10 @@ impl ReleaseSanityCheck {
         Ok(PackageMetadata { version, name })
     }
 
-    fn get_release_version(&self, ctx: &Context) -> Option<String> {
-        let git_tag = ctx.git_tag();
-        self.version.clone().or(git_tag)
+    fn get_release_version(&self, ctx: &Context) -> Result<Option<String>> {
+        let git_tag = ctx.git_tag()?.to_owned();
+        Ok(self.version.clone().or(git_tag))
     }
-}
-
-fn get_git_release_url(repo_url: String, version: String) -> String {
-    let mut url_body = "/-/tags/";
-    if repo_url.starts_with("https://github.com") {
-        url_body = "/releases/tag/";
-    }
-
-    format!("{repo_url}{url_body}{version}")
-}
-
-fn get_git_compare_url(repo_url: &str, previous: String, current: String) -> String {
-    format!("{repo_url}/compare/{previous}...{current}")
 }
 
 fn fmt_anchor(version: &str, link: String) -> String {

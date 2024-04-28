@@ -1,19 +1,16 @@
-use std::{fs::File, io::Read, path::Path, process::Command};
+use std::process::Command;
 
-use clparse::{changelog::Changelog, ChangelogParser};
-use eyre::{bail, eyre, Context as _Context, OptionExt, Result};
+use eyre::{bail, Context as _Context, OptionExt, Result};
 use git2::Repository;
-use keep_a_changelog::{changelog::ChangeLogParseOptions, Changelog as MyChangelog};
+use once_cell::sync::OnceCell;
 use regex::Regex;
 
 use crate::{config, log::Logger};
 
 pub struct Context {
     workspace_path: Option<String>,
-    repository_url: String,
-    git_tag: Option<String>,
-    changelog: Changelog,
-    changelog_raw: String,
+    repository_url: OnceCell<String>,
+    git_tag: OnceCell<Option<String>>,
     log: Logger,
 }
 
@@ -30,41 +27,11 @@ impl Context {
 
         let debug = options.debug || config.as_ref().and_then(|c| c.debug).unwrap_or(false);
 
-        let repo = Repository::open(std::env::current_dir()?)?;
-        let origin = repo
-            .find_remote("origin")
-            .wrap_err_with(|| "Failed to find origin remote")?;
-        let repository_url = origin.url().ok_or_eyre("Failed to get git remote URL")?;
-        let repository_url = normalize_origin_url(repository_url)?;
-
-        let path = Path::new("CHANGELOG.md");
-        let changelog = ChangelogParser::new("-".to_owned(), None)
-            .parse(path.to_path_buf())
-            .map_err(|e| eyre!(e.to_string()))
-            .wrap_err_with(|| "Failed to parse changelog")?;
-
-        let mut changelog_raw = String::new();
-        File::open(path)?.read_to_string(&mut changelog_raw)?;
-        let changelog_raw = changelog_raw;
-
-        // TODO: Add ability to provide tag name prefix
-        let cl = MyChangelog::parse(
-            "CHANGELOG.md",
-            ChangeLogParseOptions {
-                url: Some(repository_url.clone()),
-                ..Default::default()
-            },
-        )?;
-
-        println!("{cl}");
-
         Ok(Self {
             log: Logger::new(debug),
-            git_tag: get_git_tag()?,
-            changelog,
-            changelog_raw,
+            git_tag: OnceCell::new(),
+            repository_url: OnceCell::new(),
             workspace_path,
-            repository_url,
         })
     }
 
@@ -72,20 +39,43 @@ impl Context {
         self.workspace_path.clone()
     }
 
-    pub fn repository_url(&self) -> String {
-        self.repository_url.clone()
+    pub fn repository_url(&self) -> Result<&String> {
+        self.repository_url.get_or_try_init(|| {
+            let repo = Repository::open(std::env::current_dir()?)?;
+            let origin = repo
+                .find_remote("origin")
+                .wrap_err_with(|| "Failed to find origin remote")?;
+            let repository_url = origin.url().ok_or_eyre("Failed to get git remote URL")?;
+            let repository_url = normalize_origin_url(repository_url)?;
+            Ok(repository_url)
+        })
     }
 
-    pub fn git_tag(&self) -> Option<String> {
-        self.git_tag.clone()
-    }
+    pub fn git_tag(&self) -> Result<&Option<String>> {
+        self.git_tag.get_or_try_init(|| {
+            let output = Command::new("git")
+                .arg("log")
+                .arg("-1")
+                .arg("--format=\"%D\"")
+                .output()?;
 
-    pub fn changelog(&self) -> &Changelog {
-        &self.changelog
-    }
+            if !output.status.success() {
+                bail!("Git command executed with failing error code");
+            }
 
-    pub fn changelog_raw(&self) -> &str {
-        &self.changelog_raw
+            let refs_report = String::from_utf8_lossy(&output.stdout);
+            let rx = Regex::new(r"/tag: ([\w\d\-_.]+)/i")?;
+            let version_match = rx.captures(&refs_report);
+
+            if version_match.is_none() {
+                return Ok(None);
+            }
+
+            Ok(version_match
+                .ok_or_eyre("Failed to get version from git tag")?
+                .get(1)
+                .map(|m| m.as_str().to_string()))
+        })
     }
 
     pub fn error(&self, msg: &str) {
@@ -116,29 +106,4 @@ impl Context {
 fn normalize_origin_url(url: &str) -> Result<String> {
     let rx = Regex::new(r"git@(.+):(.+)\.git")?;
     Ok(rx.replace(url, "https://$1/$2").to_string())
-}
-
-fn get_git_tag() -> Result<Option<String>> {
-    let output = Command::new("git")
-        .arg("log")
-        .arg("-1")
-        .arg("--format=\"%D\"")
-        .output()?;
-
-    if !output.status.success() {
-        bail!("Git command executed with failing error code");
-    }
-
-    let refs_report = String::from_utf8_lossy(&output.stdout);
-    let rx = Regex::new(r"/tag: ([\w\d\-_.]+)/i")?;
-    let version_match = rx.captures(&refs_report);
-
-    if version_match.is_none() {
-        return Ok(None);
-    }
-
-    Ok(version_match
-        .ok_or_eyre("Failed to get version from git tag")?
-        .get(1)
-        .map(|m| m.as_str().to_string()))
 }
