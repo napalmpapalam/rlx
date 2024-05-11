@@ -19,7 +19,7 @@ pub enum Commands {
     ChangeLog {
         #[command(subcommand)]
         #[serde(flatten)]
-        cmd: changelog::ChangeLog,
+        cmd: changelog::Changelog,
     },
 }
 

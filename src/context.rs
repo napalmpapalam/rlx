@@ -5,33 +5,56 @@ use git2::Repository;
 use once_cell::sync::OnceCell;
 use regex::Regex;
 
-use crate::{config, log::Logger};
+use crate::{config::Config, log::Logger};
 
 pub struct Context {
-    workspace_path: Option<String>,
-    repository_url: OnceCell<String>,
-    git_tag: OnceCell<Option<String>>,
+    cfg: Config,
     log: Logger,
+    head: String,
+    git_tag: OnceCell<Option<String>>,
+    tag_prefix: Option<String>,
+    remote_url: OnceCell<String>,
+    workspace_path: Option<String>,
+    changelog_path: String,
 }
 
 impl Context {
     pub fn new_from_options(options: &super::Opts) -> Result<Self> {
-        let config = config::Config::new()
-            .wrap_err_with(|| "Failed to load config")
-            .ok();
+        let cfg = Config::new().wrap_err_with(|| "Failed to load config")?;
 
         let workspace_path = options
             .workspace_path
             .clone()
-            .or_else(|| config.as_ref().and_then(|c| c.workspace_path.clone()));
+            .or_else(|| cfg.workspace_path.clone());
 
-        let debug = options.debug || config.as_ref().and_then(|c| c.debug).unwrap_or(false);
+        let debug = options.debug || cfg.debug.unwrap_or_default();
+
+        let head = options
+            .head
+            .clone()
+            .or_else(|| cfg.head.clone())
+            .unwrap_or_else(|| "HEAD".to_owned());
+
+        let changelog_path = options
+            .changelog_path
+            .clone()
+            .or_else(|| cfg.changelog_path.clone())
+            .unwrap_or_else(|| "CHANGELOG.md".to_owned());
+
+        let tag_prefix = options
+            .tag_prefix
+            .clone()
+            .or_else(|| cfg.tag_prefix.clone());
 
         Ok(Self {
+            cfg,
+            head,
+            tag_prefix,
+            workspace_path,
+            changelog_path,
             log: Logger::new(debug),
             git_tag: OnceCell::new(),
-            repository_url: OnceCell::new(),
-            workspace_path,
+            remote_url: OnceCell::new(),
         })
     }
 
@@ -39,15 +62,30 @@ impl Context {
         self.workspace_path.clone()
     }
 
-    pub fn repository_url(&self) -> Result<&String> {
-        self.repository_url.get_or_try_init(|| {
+    pub fn head(&self) -> String {
+        self.head.clone()
+    }
+
+    pub fn changelog_path(&self) -> &str {
+        &self.changelog_path
+    }
+
+    pub fn tag_prefix(&self) -> Option<String> {
+        self.tag_prefix.clone()
+    }
+
+    pub fn remote_url(&self) -> Result<&String> {
+        self.remote_url.get_or_try_init(|| {
+            if let Some(url) = &self.cfg.remote_url {
+                return normalize_origin_url(url.as_str());
+            }
+
             let repo = Repository::open(std::env::current_dir()?)?;
             let origin = repo
                 .find_remote("origin")
                 .wrap_err_with(|| "Failed to find origin remote")?;
-            let repository_url = origin.url().ok_or_eyre("Failed to get git remote URL")?;
-            let repository_url = normalize_origin_url(repository_url)?;
-            Ok(repository_url)
+            let url = origin.url().ok_or_eyre("Failed to get git remote URL")?;
+            normalize_origin_url(url)
         })
     }
 

@@ -60,7 +60,7 @@ impl ReleaseSanityCheck {
         let today_ymd = chrono::Local::now().format("%Y-%m-%d").to_string();
         let expected_title = format!("[{version}] - {today_ymd}");
         let err_msg = format!("\"## {expected_title}\" is absent in CHANGELOG.md");
-        let repo_url = ctx.repository_url()?.to_owned();
+        let repo_url = ctx.remote_url()?.to_owned();
 
         ctx.debug("Validating changelog");
 
