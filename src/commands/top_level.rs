@@ -1,8 +1,10 @@
 use clap::Subcommand;
-use eyre::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::context::Context;
+use crate::{
+    context::Context,
+    error::{Error, Result},
+};
 
 use super::*;
 
@@ -27,7 +29,7 @@ impl Commands {
     pub async fn run(self, context: &Context) -> Result<()> {
         match self {
             Commands::ReleaseSanityCheck(cmd) => cmd.run(context).await,
-            Commands::ChangeLog { cmd } => cmd.run(context).await,
+            Commands::ChangeLog { cmd } => cmd.run(context).await.map_err(Error::from),
         }
     }
 }

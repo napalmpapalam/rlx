@@ -1,4 +1,5 @@
-use eyre::{Context, Result};
+use crate::error::Result;
+use eyre::Context;
 use serde::Deserialize;
 use std::path::Path;
 
@@ -22,5 +23,6 @@ impl Config {
             .wrap_err_with(|| "Failed to build config")?
             .try_deserialize()
             .wrap_err_with(|| "Failed to deserialize config")
+            .map_err(Into::into)
     }
 }

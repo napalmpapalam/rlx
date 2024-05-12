@@ -3,11 +3,14 @@ use std::{fs::File, path::Path};
 use colored::*;
 
 use clap::Args;
-use eyre::{eyre, Context as _Context, OptionExt, Result};
+use eyre::{Context as _Context, OptionExt};
 use keep_a_changelog::{Changelog, ChangelogParseOptions};
 use serde::{Deserialize, Serialize};
 
-use crate::context::Context;
+use crate::{
+    context::Context,
+    error::{Error, Result},
+};
 
 pub struct PackageMetadata {
     version: String,
@@ -41,22 +44,18 @@ impl ReleaseSanityCheck {
         ctx.debug(format!("Release package version: {ver}").as_str());
         ctx.debug("Validating semver compatibility of release");
 
-        if !self.validate_semver_compatibility(ctx, ver.clone())? {
-            return Ok(());
-        }
-        if !self.validate_package_version(ctx, ver.clone())? {
-            ctx.error("Release package version check is failed");
-            return Ok(());
-        }
-        if !self.validate_change_log(ctx, ver.clone())? {
-            return Ok(());
-        }
-        ctx.success("Release changelog is valid");
+        self.validate_semver_compatibility(ctx, ver.clone())?;
 
+        ctx.debug("Validating package(s) version(s)");
+
+        self.validate_package_version(ctx, ver.clone())?;
+        self.validate_change_log(ctx, ver.clone())?;
+
+        ctx.success("Release changelog is valid");
         Ok(())
     }
 
-    fn validate_change_log(&self, ctx: &Context, version: String) -> Result<bool> {
+    fn validate_change_log(&self, ctx: &Context, version: String) -> Result<()> {
         let today_ymd = chrono::Local::now().format("%Y-%m-%d").to_string();
         let expected_title = format!("[{version}] - {today_ymd}");
         let err_msg = format!("\"## {expected_title}\" is absent in CHANGELOG.md");
@@ -73,13 +72,11 @@ impl ReleaseSanityCheck {
             }),
         )?;
 
-        let latest = changelog.releases().iter().find(|r| r.version().is_some());
-        if latest.is_none() {
-            ctx.debug("Latest release not found in changelog");
-            ctx.error(err_msg.as_str());
-            return Ok(false);
-        }
-        let latest = latest.ok_or_eyre("Failed to get latest release")?;
+        let latest = changelog
+            .releases()
+            .iter()
+            .find(|r| r.version().is_some())
+            .ok_or_else(|| Error::from(err_msg.clone()))?;
         let latest_version = latest
             .version()
             .as_ref()
@@ -90,26 +87,20 @@ impl ReleaseSanityCheck {
 
         if latest_version != version {
             ctx.debug("Latest release version is not equal to the release version");
-            ctx.error(err_msg.as_str());
-            return Ok(false);
+            return Err(err_msg.into());
         }
 
-        let latest_date = latest.date();
-        if latest_date.is_none() {
-            ctx.debug("Date not found in latest release");
-            ctx.error(err_msg.as_str());
-            return Ok(false);
-        }
-
-        let latest_date = latest_date.ok_or_eyre("Failed to get latest release date")?;
-        let latest_date = latest_date.format("%Y-%m-%d").to_string();
+        let latest_date = latest
+            .date()
+            .ok_or_eyre("Failed to get latest release date")?
+            .format("%Y-%m-%d")
+            .to_string();
 
         ctx.debug(format!("Latest release date: {latest_date}").as_str());
 
         if latest_date != today_ymd {
             ctx.debug("Latest release date is not equal to today's date");
-            ctx.error(err_msg.as_str());
-            return Ok(false);
+            return Err(err_msg.into());
         }
 
         let links = changelog
@@ -149,37 +140,26 @@ impl ReleaseSanityCheck {
         }
 
         if invalid_anchors {
-            ctx.error_fmt(
-                format!(
-                    "{}\n{}",
-                    "The anchors legend is invalid, should be: ".red().bold(),
-                    anchors.join("\n").red()
-                )
-                .as_str(),
-            );
+            return Err(Error::new_fmt(format!(
+                "{}\n{}",
+                "The anchors legend is invalid, should be: ".red().bold(),
+                anchors.join("\n").red()
+            )));
         }
-        Ok(!invalid_anchors)
+
+        Ok(())
     }
 
-    fn validate_semver_compatibility(&self, ctx: &Context, version: String) -> Result<bool> {
-        let semver = semver::Version::parse(&version);
+    fn validate_semver_compatibility(&self, ctx: &Context, version: String) -> Result<()> {
+        semver::Version::parse(&version).map_err(|e| {
+            format!("Release version is not compatible with semantic versioning: {e}")
+        })?;
 
-        match semver {
-            Ok(_) => {
-                ctx.success("Release version is compatible with semantic versioning");
-                Ok(true)
-            }
-            Err(e) => {
-                ctx.error(
-                    format!("Release version is not compatible with semantic versioning: {e}")
-                        .as_str(),
-                );
-                Ok(false)
-            }
-        }
+        ctx.success("Release version is compatible with semantic versioning");
+        Ok(())
     }
 
-    fn validate_package_version(&self, ctx: &Context, version: String) -> Result<bool> {
+    fn validate_package_version(&self, ctx: &Context, version: String) -> Result<()> {
         if let Some(workspace_path) = ctx.workspace_path() {
             ctx.debug("Validating workspace package versions");
             return self.validate_workspace_package_versions(ctx, workspace_path, version);
@@ -194,28 +174,25 @@ impl ReleaseSanityCheck {
         ctx: &Context,
         workspace_path: String,
         version: String,
-    ) -> Result<bool> {
-        let mut valid = true;
+    ) -> Result<()> {
         let dir = Path::new(workspace_path.as_str());
         for entry in dir
             .read_dir()
             .wrap_err_with(|| "Failed to read workspace directory")?
         {
-            let entry = entry?;
+            let entry = entry.wrap_err_with(|| "Failed to read package directory")?;
             let path = entry.path();
             if path.is_dir() {
                 let path_str = path
                     .to_str()
-                    .ok_or(eyre!("Failed to convert path to string"))?
+                    .ok_or_eyre("Failed to convert path to string")?
                     .to_string();
 
-                valid = self
-                    .validate_single_package_version(ctx, version.clone(), Some(path_str))
-                    .wrap_err_with(|| "Failed to validate single package version during validating the workspace directory")?;
+                self.validate_single_package_version(ctx, version.clone(), Some(path_str))?;
             }
         }
 
-        Ok(valid)
+        Ok(())
     }
 
     fn validate_single_package_version(
@@ -223,18 +200,12 @@ impl ReleaseSanityCheck {
         ctx: &Context,
         release_version: String,
         dir: Option<String>,
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let PackageMetadata { version, name } = self.get_package_metadata(ctx, dir)?;
         let valid = release_version == version;
 
-        match valid {
-            true => ctx.success_fmt(&format!(
-                "{}{}{}",
-                "Release version of the ".green(),
-                name.clone().green().bold(),
-                " is valid".green()
-            )),
-            false => ctx.error_fmt(&format!(
+        if !valid {
+            return Err(Error::new_fmt(format!(
                 "{}{}{}{}{}{}",
                 "Release version of the ".red(),
                 name.clone().red().bold(),
@@ -242,10 +213,16 @@ impl ReleaseSanityCheck {
                 release_version.clone().red().bold(),
                 ", actual: ".red(),
                 version.red().bold()
-            )),
+            )));
         }
 
-        Ok(valid)
+        ctx.success_fmt(&format!(
+            "{}{}{}",
+            "Release version of the ".green(),
+            name.clone().green().bold(),
+            " is valid".green()
+        ));
+        Ok(())
     }
 
     fn get_package_metadata(&self, ctx: &Context, dir: Option<String>) -> Result<PackageMetadata> {
@@ -259,7 +236,8 @@ impl ReleaseSanityCheck {
                 .wrap_err_with(|| "Failed to build package.json file path")?,
         )
         .wrap_err_with(|| "Failed to open package.json file")?;
-        let json: serde_json::Value = serde_json::from_reader(file)?;
+        let json: serde_json::Value =
+            serde_json::from_reader(file).wrap_err_with(|| "Failed to create json from reader")?;
         let version = json
             .get("version")
             .and_then(|v| v.as_str())

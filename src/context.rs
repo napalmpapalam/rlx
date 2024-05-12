@@ -120,6 +120,7 @@ impl Context {
         self.log.error(msg);
     }
 
+    #[allow(dead_code)]
     pub fn error_fmt(&self, msg: &str) {
         self.log.error_fmt(msg);
     }

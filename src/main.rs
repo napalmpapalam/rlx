@@ -2,6 +2,7 @@ mod changelog_ext;
 mod commands;
 mod config;
 mod context;
+mod error;
 mod log;
 mod version_ext;
 
@@ -18,7 +19,6 @@ const STYLES: Styles = Styles::styled()
     .placeholder(Ansi::BrightCyan.on_default())
     .error(Ansi::Red.on_default().bold());
 
-// TODO: Add process exit on error
 // TODO: Add proper printing error of parsing changelog
 
 #[derive(Clone, Parser, Debug, Serialize, Deserialize)]
@@ -74,6 +74,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     color_eyre::install()?;
     let opts: Opts = Opts::parse();
     let ctx = context::Context::new_from_options(&opts)?;
-    opts.cmd.run(&ctx).await?;
+    if let Some(err) = opts.cmd.run(&ctx).await.err() {
+        eprintln!("{}", err);
+        std::process::exit(1);
+    }
+
     Ok(())
 }

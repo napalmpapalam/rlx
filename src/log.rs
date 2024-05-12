@@ -14,6 +14,7 @@ impl Logger {
         eprintln!("{}", MessageBuilder::new().error(msg).build());
     }
 
+    #[allow(dead_code)]
     pub fn error_fmt(&self, msg: &str) {
         eprintln!("{}", MessageBuilder::new().error_fmt(msg).build());
     }
@@ -38,7 +39,7 @@ impl Logger {
     }
 }
 
-struct MessageBuilder {
+pub struct MessageBuilder {
     msg: String,
 }
 

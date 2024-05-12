@@ -1,5 +1,5 @@
-use crate::context::Context;
-use eyre::{Context as _Context, Result};
+use crate::{context::Context, error::Result};
+use eyre::Context as _Context;
 
 use keep_a_changelog::{Changelog, ChangelogParseOptions};
 

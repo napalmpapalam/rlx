@@ -1,8 +1,7 @@
 use clap::Subcommand;
-use eyre::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::context::Context;
+use crate::{context::Context, error::Result};
 
 use self::{format::FormatCmd, get::GetCmd, release::ReleaseCmd, validate::ValidateCmd};
 

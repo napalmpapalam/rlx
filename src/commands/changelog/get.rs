@@ -1,9 +1,8 @@
 use clap::Args;
-use eyre::Result;
 use keep_a_changelog::Changelog;
 use serde::{Deserialize, Serialize};
 
-use crate::{changelog_ext::ChangelogExt, context::Context};
+use crate::{changelog_ext::ChangelogExt, context::Context, error::Result};
 
 #[derive(Clone, Args, Debug, Serialize, Deserialize)]
 pub(crate) struct GetCmd {
@@ -27,8 +26,7 @@ impl GetCmd {
                 return Ok(());
             }
 
-            ctx.error("Latest release not found");
-            return Ok(());
+            return Err("Latest release not found".into());
         }
 
         let release = changelog.find_release(self.version.clone())?;
@@ -38,7 +36,6 @@ impl GetCmd {
             return Ok(());
         }
 
-        ctx.error(&format!("{} release not found", self.version));
-        Ok(())
+        Err(format!("{} release not found", self.version).into())
     }
 }
