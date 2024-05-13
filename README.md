@@ -48,13 +48,13 @@ There are a few ways to configure the `rlx`:
 
 Options:
 
-| Option name        | Option alias | Environment variable | Description                                                                                                                                                                                                                     |
-| ------------------ | ------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--workspace_path` | `-w`         | `RLX_WORKSPACE_PATH` | Path to the workspace directory with the packages directories if it's mono-repo (eg. `./packages`). Used to infer the packages path for validating `package.json` version. If not provided, the current directory will be used. |
-| `--debug`          | ❌            | `RLX_DEBUG`          | Enable debug mode, which will print debug logs.                                                                                                                                                                                 |
-| `--remote-url`     | `-url`       | `RLX_REMOTE_URL`     | The Git Remote URL of the repository, used to generate compare links in the changelog. If not provided it will be inferred from the git configuration.                                                                          |
-| `--tag-prefix`     | `-t`         | `RLX_TAG_PREFIX`     | The tag prefix to use (e.g. `v`), used to generate compare links in the changelog. If not provided it will empty.                                                                                                               |
-| `--head`           | ❌            | `RLX_HEAD`           | The head to use (by default `HEAD`), used to generate compare links in the changelog                                                                                                                                            |
+| Option name      | Option alias | Environment variable | Description                                                                                                                                                                                                                     |
+| ---------------- | ------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspace_path` | `-w`         | `RLX_WORKSPACE_PATH` | Path to the workspace directory with the packages directories if it's mono-repo (eg. `./packages`). Used to infer the packages path for validating `package.json` version. If not provided, the current directory will be used. |
+| `debug`          | ❌            | `RLX_DEBUG`          | Enable debug mode, which will print debug logs.                                                                                                                                                                                 |
+| `remote-url`     | `-url`       | `RLX_REMOTE_URL`     | The Git Remote URL of the repository, used to generate compare links in the changelog. If not provided it will be inferred from the git configuration.                                                                          |
+| `tag-prefix`     | `-t`         | `RLX_TAG_PREFIX`     | The tag prefix to use (e.g. `v`), used to generate compare links in the changelog. If not provided it will empty.                                                                                                               |
+| `head`           | ❌            | `RLX_HEAD`           | The head to use (by default `HEAD`), used to generate compare links in the changelog                                                                                                                                            |
 
 ## Usage
 
