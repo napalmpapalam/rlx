@@ -1,6 +1,6 @@
 <h1>
   <p align="center">
-    <img alt="rlx" src="https://raw.githubusercontent.com/napalmpapalam/rlx/feature/cl/assets/logo.png" width="300"/>
+    <img alt="rlx" src="https://raw.githubusercontent.com/napalmpapalam/rlx/feature/cl/assets/logo.png" width="450"/>
   </p>
 </h1>
 
