@@ -42,7 +42,7 @@ yarn add -D @napalmpapalam/rlx
 
 There are a few ways to configure the `rlx`:
 
-- `.rlx.yml` file in the root of the project, names of the options equal to the CLI flags
+- `.rlx.yml` file in the root of the project, names of the options equal to the CLI flags but in the snake case (e.g. `tag-prefix` -> `tag_prefix`)
 - Global flags which will be passed to the `rlx` command
 - Environment variables with the `RLX_` prefix
 
@@ -50,7 +50,7 @@ Options:
 
 | Option name      | Option alias | Environment variable | Description                                                                                                                                                                                                                                          |
 | ---------------- | ------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `workspace_path` | `-w`         | `RLX_WORKSPACE_PATH` | Path to the workspace directory with the packages directories if it's mono-repo (eg. `rlx --workspace-path ./packages`). Used to infer the packages path for validating `package.json` version. If not provided, the current directory will be used. |
+| `workspace-path` | `-w`         | `RLX_WORKSPACE_PATH` | Path to the workspace directory with the packages directories if it's mono-repo (eg. `rlx --workspace-path ./packages`). Used to infer the packages path for validating `package.json` version. If not provided, the current directory will be used. |
 | `debug`          | ❌            | `RLX_DEBUG`          | Enable debug mode, which will print debug logs.                                                                                                                                                                                                      |
 | `remote-url`     | `-url`       | `RLX_REMOTE_URL`     | The Git Remote URL of the repository, used to generate compare links in the changelog. If not provided it will be inferred from the git configuration.                                                                                               |
 | `tag-prefix`     | `-t`         | `RLX_TAG_PREFIX`     | The tag prefix to use (e.g. `rlx --tag-prefix v`), used to generate compare links in the changelog. If not provided it will empty.                                                                                                                   |
