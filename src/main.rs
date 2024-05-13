@@ -41,7 +41,7 @@ pub struct Opts {
     /// The path to the changelog file, defaults to `CHANGELOG.md`
     ///
     /// Can be set via `RLX_CHANGELOG_PATH` environment variable or `changelog_path` config option in the `.rlx.yml` file.
-    #[arg(global = true, alias = "cp")]
+    #[arg(global = true, alias = "cp", long)]
     pub changelog_path: Option<String>,
     /// The Git Remote URL of the repository, used to generate compare links in the changelog.
     ///

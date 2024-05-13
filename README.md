@@ -51,6 +51,7 @@ Options:
 | Option name      | Option alias | Environment variable | Description                                                                                                                                                                                                                                          |
 | ---------------- | ------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `workspace-path` | `-w`         | `RLX_WORKSPACE_PATH` | Path to the workspace directory with the packages directories if it's mono-repo (eg. `rlx --workspace-path ./packages`). Used to infer the packages path for validating `package.json` version. If not provided, the current directory will be used. |
+| `changelog-path` | `-cp`        | `RLX_CHANGELOG_PATH` | Path to the changelog file (eg. `rlx --changelog-path ./CHANGELOG.md`). If not provided, the `CHANGELOG.md` file in the root of the project will be used.                                                                                            |
 | `debug`          | ❌            | `RLX_DEBUG`          | Enable debug mode, which will print debug logs.                                                                                                                                                                                                      |
 | `remote-url`     | `-url`       | `RLX_REMOTE_URL`     | The Git Remote URL of the repository, used to generate compare links in the changelog. If not provided it will be inferred from the git configuration.                                                                                               |
 | `tag-prefix`     | `-t`         | `RLX_TAG_PREFIX`     | The tag prefix to use (e.g. `rlx --tag-prefix v`), used to generate compare links in the changelog. If not provided it will empty.                                                                                                                   |
@@ -58,7 +59,101 @@ Options:
 
 ## Usage
 
+`rlx` CLI provides a set of commands to work with the releases, such as:
+
+- [`rlx rsc`](#rlx-rsc)
+- [`rlx change-log`](#rlx-change-log) - Changelog commands, used to parse and manipulate changelog
+- [`rlx help`](#rlx-help) - Display help for the `rlx` CLI
+
+### `rlx rsc`
+
+Release Sanity Check. Check that a release is sane (`package.json`, `CHANGELOG.md` and semantic versioning are valid for the release).
+
+Usage:
+
+```sh
+rlx rsc [OPTIONS] [VERSION]
+```
+
+Arguments:
+
+- `[VERSION]` - The release version to check, if not provided, the not pushed git tag will be used. If no git tag is found, the check will be skipped
+
+The command will check the following:
+
+- The provided version is a valid semver version
+- The `package.json` version is equal to the provided version
+- The `CHANGELOG.md` contains the provided version release notes and the release date is equal to the current date, and the release compares link is valid\exists
+
+Example:
+
+```sh
+rlx rsc 1.0.0
+```
+
+### `rlx change-log`
 TODO: Add usage examples
+
+### `rlx help`
+
+Display help for the `rlx` CLI
+
+Usage:
+
+```sh
+rlx help
+```
+
+It will display the help message with the available commands and options such as:
+
+```
+Usage: rlx [OPTIONS] <COMMAND>
+
+Commands:
+  rsc         Release Sanity Check. Check that a release is sane (`package.json`, `CHANGELOG.md` and semantic versioning are valid for the release)
+  change-log  Change Log commands, used to parse and manipulate changelog
+  help        Print this message or the help of the given subcommand(s)
+
+Options:
+  -w, --workspace-path <WORKSPACE_PATH>
+          Path to the workspace directory with the packages directories if it's mono-repo (eg. "./packages"). Used to infer the package(s) path for validating package.json version.
+
+          If not provided, the current directory will be used.
+
+          Can be set via `RLX_WORKSPACE_PATH` environment variable or `workspace_path` config option in the `.rlx.yml` file.
+
+      --debug
+          Enable debug mode, which will print debug logs.
+
+          Can be set via `RLX_DEBUG` environment variable or `debug` config option in the `.rlx.yml` file.
+
+      --changelog-path <CHANGELOG_PATH>
+          The path to the changelog file, defaults to `CHANGELOG.md`
+
+          Can be set via `RLX_CHANGELOG_PATH` environment variable or `changelog_path` config option in the `.rlx.yml` file.
+
+      --remote-url <REMOTE_URL>
+          The Git Remote URL of the repository, used to generate compare links in the changelog.
+
+          If not provided it will be inferred from the git configuration.
+
+          Can be set via `RLX_REMOTE_URL` environment variable or `remote_url` config option in the `.rlx.yml` file.
+
+  -t, --tag-prefix <TAG_PREFIX>
+          The tag prefix to use (e.g. `v`), used to generate compare links in the changelog.
+
+          If not provided it will empty.
+
+          Can be set via `RLX_TAG_PREFIX` environment variable or `tag_prefix` config option in the `.rlx.yml` file.
+
+      --head <HEAD>
+          The head to use (by default `HEAD`), used to generate compare links in the changelog
+
+          Can be set via `RLX_HEAD` environment variable or `head` config option in the `.rlx.yml` file.
+
+  -h, --help
+          Print help (see a summary with '-h')
+```
 
 ## Contribute
 
