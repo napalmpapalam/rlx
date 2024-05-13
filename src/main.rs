@@ -71,7 +71,6 @@ pub struct Opts {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    color_eyre::install()?;
     let opts: Opts = Opts::parse();
     let ctx = context::Context::new_from_options(&opts)?;
     if let Some(err) = opts.cmd.run(&ctx).await.err() {
