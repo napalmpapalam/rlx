@@ -69,13 +69,13 @@ Options:
 
 Release Sanity Check. Check that a release is sane (`package.json`, `CHANGELOG.md` and semantic versioning are valid for the release).
 
-Usage:
+**Usage:**
 
 ```sh
 rlx rsc [OPTIONS] [VERSION]
 ```
 
-Arguments:
+**Arguments:**
 
 - `[VERSION]` - The release version to check, if not provided, the not pushed git tag will be used. If no git tag is found, the check will be skipped
 
@@ -85,7 +85,7 @@ The command will check the following:
 - The `package.json` version is equal to the provided version
 - The `CHANGELOG.md` contains the provided version release notes and the release date is equal to the current date, and the release compares link is valid\exists
 
-Example:
+**Example:**
 
 ```sh
 rlx rsc 1.0.0
@@ -98,7 +98,7 @@ TODO: Add usage examples
 
 Display help for the `rlx` CLI
 
-Usage:
+**Usage:**
 
 ```sh
 rlx help
