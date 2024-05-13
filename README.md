@@ -62,8 +62,8 @@ Options:
 `rlx` CLI provides a set of commands to work with the releases, such as:
 
 - [`rlx rsc`](#rlx-rsc)
-- [`rlx change-log`](#rlx-change-log) - Changelog commands, used to parse and manipulate changelog
-- [`rlx help`](#rlx-help) - Display help for the `rlx` CLI
+- [`rlx change-log`](#rlx-change-log)
+- [`rlx help`](#rlx-help)
 
 ### `rlx rsc`
 
@@ -92,6 +92,9 @@ rlx rsc 1.0.0
 ```
 
 ### `rlx change-log`
+
+Changelog commands, used to parse and manipulate changelog
+
 TODO: Add usage examples
 
 ### `rlx help`
