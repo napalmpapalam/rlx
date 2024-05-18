@@ -1,4 +1,5 @@
-use eyre::{Context, Result};
+use crate::error::Result;
+use eyre::Context;
 use serde::Deserialize;
 use std::path::Path;
 
@@ -7,6 +8,10 @@ pub struct Config {
     #[serde(default)]
     pub workspace_path: Option<String>,
     pub debug: Option<bool>,
+    pub changelog_path: Option<String>,
+    pub remote_url: Option<String>,
+    pub tag_prefix: Option<String>,
+    pub head: Option<String>,
 }
 
 impl Config {
@@ -18,5 +23,6 @@ impl Config {
             .wrap_err_with(|| "Failed to build config")?
             .try_deserialize()
             .wrap_err_with(|| "Failed to deserialize config")
+            .map_err(Into::into)
     }
 }
