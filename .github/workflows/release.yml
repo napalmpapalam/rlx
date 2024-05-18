@@ -83,8 +83,8 @@ jobs:
       - name: Install musl-tools (Linux)
         if: matrix.build == 'linux'
         run: |
-          sudo apt-get update -y
-          sudo apt-get install musl-tools -y
+          sudo apt-get update -
+          sudo apt-get install musl-tools pkg-config libssl-dev -y
 
       - name: Install p7zip (MacOS)
         if: matrix.build == 'macos'

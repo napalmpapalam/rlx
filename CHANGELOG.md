@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2024-05-18
+### Fixed
+- Trying to fix linux build
+
 ## [0.2.0] - 2024-05-18
 ### Added
 - Changelog command
@@ -60,7 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 
 
-[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.0...HEAD
+[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.1...HEAD
+[0.2.1]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.0...rust_v0.2.1
 [0.2.0]: https://github.com/napalmpapalam/rlx/compare/rust_v0.1.9...rust_v0.2.0
 [0.1.9]: https://github.com/napalmpapalam/rlx/compare/rust_v0.1.8...rust_v0.1.9
 [0.1.8]: https://github.com/napalmpapalam/rlx/compare/rust_v0.1.7...rust_v0.1.8
