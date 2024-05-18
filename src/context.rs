@@ -116,6 +116,7 @@ impl Context {
         })
     }
 
+    #[allow(dead_code)]
     pub fn error(&self, msg: &str) {
         self.log.error(msg);
     }

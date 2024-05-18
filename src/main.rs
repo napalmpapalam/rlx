@@ -4,7 +4,6 @@ mod config;
 mod context;
 mod error;
 mod log;
-mod version_ext;
 
 use clap::{
     builder::styling::{AnsiColor as Ansi, Styles},
@@ -18,9 +17,6 @@ const STYLES: Styles = Styles::styled()
     .literal(Ansi::BrightCyan.on_default().bold())
     .placeholder(Ansi::BrightCyan.on_default())
     .error(Ansi::Red.on_default().bold());
-
-// TODO: Add proper printing error of parsing changelog
-// TODO: Add apply-version command
 
 #[derive(Clone, Parser, Debug, Serialize, Deserialize)]
 #[clap(about)]

@@ -1,6 +1,6 @@
 use chrono::Local;
 use clap::Args;
-use eyre::{Context as _Context, OptionExt};
+use eyre::{eyre, OptionExt};
 use keep_a_changelog::{Changelog, Release};
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -18,7 +18,7 @@ impl ReleaseCmd {
         let version: Version = self
             .version
             .parse()
-            .wrap_err_with(|| "Failed to parse version")?;
+            .map_err(|e| eyre!("Failed to parse version: {e}"))?;
         let mut changelog = Changelog::from_ctx(ctx)?;
         let unreleased = changelog
             .get_unreleased_mut()
@@ -33,7 +33,7 @@ impl ReleaseCmd {
             .date(Local::now().naive_local())
             .changes(unreleased.changes().clone())
             .build()
-            .wrap_err_with(|| "Failed to build release")?;
+            .map_err(|e| eyre!("Failed to build release: {e}"))?;
 
         unreleased.empty_changes();
         changelog.add_release(release);

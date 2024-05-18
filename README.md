@@ -29,6 +29,8 @@
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [`rlx rsc`](#rlx-rsc)
+  - [`rlx version`](#rlx-version)
+    - [`rlx version apply`](#rlx-version-apply)
   - [`rlx change-log`](#rlx-change-log)
     - [`rlx change-log get`](#rlx-change-log-get)
     - [`rlx change-log format`](#rlx-change-log-format)
@@ -106,7 +108,8 @@ npx rlx rsc [OPTIONS] <VERSION>
 
 **Arguments:**
 
-- `<VERSION>` - The release version to check, if not provided, the not pushed git tag will be used. If no git tag is found, the check will be skipped
+- `<VERSION>` - The release version to check, if not provided, the not pushed git tag will be used.
+  If no git tag is found, the check will be skipped
 
 The command will check the following:
 
@@ -118,6 +121,31 @@ The command will check the following:
 
 ```sh
 npx rlx rsc 1.0.0
+```
+
+### `rlx version`
+
+Version commands, used to manipulate the version in the `package.json` file.
+
+#### `rlx version apply`
+
+Set the provided version to the `package.json` file. The `--workspace-path` option can be used as
+well to apply the version to the mono-repo packages.
+
+**Usage:**
+
+```sh
+npx rlx version apply [OPTIONS] <VERSION>
+```
+
+**Arguments:**
+
+- `<VERSION>` - The version to apply to the `package.json` file
+
+**Example:**
+
+```sh
+npx rlx version apply 1.0.0
 ```
 
 ### `rlx change-log`

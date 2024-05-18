@@ -23,12 +23,21 @@ pub enum Commands {
         #[serde(flatten)]
         cmd: changelog::Changelog,
     },
+
+    /// Version commands, used to manipulate versions
+    #[command(alias = "v")]
+    Version {
+        #[command(subcommand)]
+        #[serde(flatten)]
+        cmd: version::Version,
+    },
 }
 
 impl Commands {
     pub async fn run(self, context: &Context) -> Result<()> {
         match self {
             Commands::ReleaseSanityCheck(cmd) => cmd.run(context).await,
+            Commands::Version { cmd } => cmd.run(context).await,
             Commands::ChangeLog { cmd } => cmd.run(context).await.map_err(Error::from),
         }
     }
