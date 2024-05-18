@@ -85,7 +85,6 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install musl-tools -y
-          sudo apt-get install libssl-dev
 
       - name: Install p7zip (MacOS)
         if: matrix.build == 'macos'
