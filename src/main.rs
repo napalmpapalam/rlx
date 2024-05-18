@@ -20,6 +20,7 @@ const STYLES: Styles = Styles::styled()
     .error(Ansi::Red.on_default().bold());
 
 // TODO: Add proper printing error of parsing changelog
+// TODO: Add apply-version command
 
 #[derive(Clone, Parser, Debug, Serialize, Deserialize)]
 #[clap(about)]

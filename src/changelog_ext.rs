@@ -1,5 +1,4 @@
 use crate::{context::Context, error::Result};
-use eyre::Context as _Context;
 
 use keep_a_changelog::{Changelog, ChangelogParseOptions};
 
@@ -18,8 +17,7 @@ impl ChangelogExt for Changelog {
                 tag_prefix: ctx.tag_prefix(),
                 head: Some(ctx.head()),
             }),
-        )
-        .wrap_err_with(|| "Failed to parse changelog")?;
+        )?;
 
         ctx.debug("Successfully parsed changelog");
 

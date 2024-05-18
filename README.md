@@ -5,7 +5,7 @@
 </h1>
 
 <p align="center">
-  Work with releases of the npm packages with ease
+  Work with releases with ease
 </p>
 
 <div align="center">
@@ -19,6 +19,26 @@
     <img alt="NPM version" src="https://img.shields.io/npm/v/@napalmpapalam/rlx.svg" />
   </a>
 </div>
+
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [Changelog](#changelog)
+- [Installation](#installation)
+- [Build from source](#build-from-source)
+- [Configuration](#configuration)
+- [Usage](#usage)
+  - [`rlx rsc`](#rlx-rsc)
+  - [`rlx change-log`](#rlx-change-log)
+    - [`rlx change-log get`](#rlx-change-log-get)
+    - [`rlx change-log format`](#rlx-change-log-format)
+    - [`rlx change-log validate`](#rlx-change-log-validate)
+    - [`rlx change-log release`](#rlx-change-log-release)
+  - [`rlx help`](#rlx-help)
+- [Contribute](#contribute)
+  - [Reporting Issues](#reporting-issues)
+  - [Submitting pull requests](#submitting-pull-requests)
+- [License](#license)
 
 ## Changelog
 
@@ -36,6 +56,19 @@ or with the yarn:
 
 ```sh
 yarn add -D @napalmpapalam/rlx
+```
+
+## Build from source
+
+Before building the `rlx` from the source, make sure you have the [Rust](https://www.rust-lang.org/tools/install) installed on your machine.
+
+To build the `rlx` from the source, run:
+
+```sh
+git clone https://github.com/napalmpapalam/rlx.git
+cd rlx
+cargo build --release
+cp ./target/release/rlx /usr/local/bin/rlx # or any other directory in the PATH
 ```
 
 ## Configuration
@@ -59,11 +92,7 @@ Options:
 
 ## Usage
 
-`rlx` CLI provides a set of commands to work with the releases, such as:
-
-- [`rlx rsc`](#rlx-rsc)
-- [`rlx change-log`](#rlx-change-log)
-- [`rlx help`](#rlx-help)
+`rlx` CLI provides a set of commands to work with the releases, which you can use to automate the release process.
 
 ### `rlx rsc`
 
@@ -72,12 +101,12 @@ Release Sanity Check. Check that a release is sane (`package.json`, `CHANGELOG.m
 **Usage:**
 
 ```sh
-rlx rsc [OPTIONS] [VERSION]
+npx rlx rsc [OPTIONS] <VERSION>
 ```
 
 **Arguments:**
 
-- `[VERSION]` - The release version to check, if not provided, the not pushed git tag will be used. If no git tag is found, the check will be skipped
+- `<VERSION>` - The release version to check, if not provided, the not pushed git tag will be used. If no git tag is found, the check will be skipped
 
 The command will check the following:
 
@@ -88,14 +117,72 @@ The command will check the following:
 **Example:**
 
 ```sh
-rlx rsc 1.0.0
+npx rlx rsc 1.0.0
 ```
 
 ### `rlx change-log`
 
-Changelog commands, used to parse and manipulate changelog
+Changelog commands, used to parse and manipulate changelog.
 
-TODO: Add usage examples
+#### `rlx change-log get`
+
+Get the release changelog for the provided version.
+
+**Usage:**
+
+```sh
+npx rlx change-log get [OPTIONS] <VERSION>
+```
+
+**Arguments:**
+
+- `<VERSION>` - The release version to get the changelog for, alternatively, you can use `latest` to get the latest release changelog
+
+**Example:**
+
+```sh
+npx rlx change-log get 1.0.0
+```
+
+#### `rlx change-log format`
+
+Format the changelog file, making sure it's valid and consistent.
+
+**Usage:**
+
+```sh
+npx rlx change-log format [OPTIONS]
+```
+
+#### `rlx change-log validate`
+
+Validate the changelog file, making sure it's valid and consistent.
+
+**Usage:**
+
+```sh
+npx rlx change-log validate [OPTIONS]
+```
+
+#### `rlx change-log release`
+
+Make a release from `[Unreleased]` section
+
+**Usage:**
+
+```sh
+npx rlx change-log release [OPTIONS] <VERSION>
+```
+
+**Arguments:**
+
+- `<VERSION>` - The release version to make the release for.
+
+**Example:**
+
+```sh
+npx rlx change-log release 1.0.0
+```
 
 ### `rlx help`
 
@@ -104,7 +191,7 @@ Display help for the `rlx` CLI
 **Usage:**
 
 ```sh
-rlx help
+npx rlx help
 ```
 
 It will display the help message with the available commands and options such as:
