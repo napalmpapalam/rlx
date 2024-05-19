@@ -33,7 +33,7 @@ jobs:
             os: macos-14
             rust: stable
           - build: macos-intel
-            os: macos-14-large
+            os: macos-13
             rust: stable
 
     steps:
