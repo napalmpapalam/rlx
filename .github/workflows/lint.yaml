@@ -36,7 +36,8 @@ jobs:
             os: ubuntu-latest
             rust: stable
           - build: macos
-            os: macos-latest
+            os: macos-14
+            host_target: aarch64-apple-darwin
             rust: stable
           - build: windows
             os: windows-latest
@@ -105,15 +106,11 @@ jobs:
       - name: Build (MacOS)
         if: matrix.build == 'macos'
         working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          rustup target add ${{ env.MACOS_TARGET }}
-          cargo build --release --target ${{ env.MACOS_TARGET }}
+        run: cargo build --release
 
       - name: Build (Windows)
         if: matrix.build == 'windows'
         working-directory: ${{ env.WORKING_DIR }}
-        run: |
-          rustup target add ${{ env.WINDOWS_TARGET }}
-          cargo build --release --target ${{ env.WINDOWS_TARGET }}
+        run: cargo build --release
         env:
           RUSTFLAGS: -Ctarget-feature=+crt-static
