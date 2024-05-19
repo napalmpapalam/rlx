@@ -61,7 +61,8 @@ const getPlatformMetadata = () => {
 
 const getBinary = () => {
   const platformMetadata = getPlatformMetadata()
-  const url = `${repository.url}/releases/download/rust_v${version}/${NAME}-v${version}-${platformMetadata.RUST_TARGET}.tar.gz`
+  const macArch = platformMetadata.TYPE === "Darwin" ? `-${platformMetadata.ARCHITECTURE}` : ""
+  const url = `${repository.url}/releases/download / rust_v${version} /${NAME}-v${version}-${platformMetadata.RUST_TARGET}${macArch}.tar.gz`
   return new Binary(platformMetadata.BINARY_NAME, url, version, {
     installDirectory: join(__dirname, "node_modules", ".bin")
   })

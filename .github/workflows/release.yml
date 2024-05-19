@@ -31,9 +31,11 @@ jobs:
           - build: linux
             os: ubuntu-latest
             rust: stable
-          - build: macos
+          - build: macos-arm
             os: macos-14
-            host_target: aarch64-apple-darwin
+            rust: stable
+          - build: macos-intel
+            os: macos-14-large
             rust: stable
           - build: windows
             os: windows-latest
@@ -88,9 +90,14 @@ jobs:
           sudo apt-get update -
           sudo apt-get install musl-tools pkg-config libssl-dev -y
 
-      - name: Install p7zip (MacOS)
-        if: matrix.build == 'macos'
+      - name: Install p7zip (MacOS-arm)
+        if: matrix.build == 'macos-arm'
         run: brew install p7zip
+
+      - name: Install p7zip (MacOS-intel)
+        if: matrix.build == 'macos-intel'
+        run: brew install p7zip
+
 
       - name: Build (Linux)
         if: matrix.build == 'linux'
@@ -99,8 +106,13 @@ jobs:
           rustup target add ${{ env.LINUX_TARGET }}
           cargo build --release --target ${{ env.LINUX_TARGET }}
 
-      - name: Build (MacOS)
-        if: matrix.build == 'macos'
+      - name: Build (MacOS-arm)
+        if: matrix.build == 'macos-arm'
+        working-directory: ${{ env.WORKING_DIR }}
+        run: cargo build --release
+
+      - name: Build (MacOS-intel)
+        if: matrix.build == 'macos-intel'
         working-directory: ${{ env.WORKING_DIR }}
         run: cargo build --release
 
@@ -133,12 +145,20 @@ jobs:
           mv ./target/release/${{ env.RELEASE_BIN }}.exe ./dist/${{ env.RELEASE_BIN }}.exe
           7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
-      - name: Create tarball (MacOS)
-        if: matrix.build == 'macos'
+      - name: Create tarball (MacOS-arm)
+        if: matrix.build == 'macos-arm'
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           mv ./target/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
-          7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
+          7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
+
+      - name: Create tarball (MacOS-intel)
+        if: matrix.build == 'macos-intel'
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          mv ./target/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
+          7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
+
 
       - name: Upload Zip
         uses: actions/upload-artifact@v1
@@ -177,10 +197,15 @@ jobs:
         with:
           name: windows
 
-      - name: Download MacOS tarball
+      - name: Download MacOS-arm tarball
         uses: actions/download-artifact@v1
         with:
-          name: macos
+          name: macos-arm
+
+      - name: Download MacOS-intel tarball
+        uses: actions/download-artifact@v1
+        with:
+          name: macos-intel
 
       - name: Release Linux tarball
         uses: actions/upload-release-asset@v1
@@ -202,15 +227,25 @@ jobs:
           asset_content_type: application/gzip
           asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
-      - name: Release MacOS tarball
+      - name: Release MacOS-arm tarball
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./macos/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
+          asset_path: ./macos-arm/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
           asset_content_type: application/gzip
-          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
+          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
+
+      - name: Release MacOS-intel tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./macos-intel/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
+          asset_content_type: application/gzip
+          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
 
   npm_publish:
     name: Publish to NPM
