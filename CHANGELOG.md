@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2024-05-19
+### Changed
+- Trying to fix macos binary
+
 ## [0.2.2] - 2024-05-19
 ### Removed
 - `git2` dependency to remove the need for `libgit2` on the system
@@ -68,7 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 
 
-[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.2...HEAD
+[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.3...HEAD
+[0.2.3]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.2...rust_v0.2.3
 [0.2.2]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.1...rust_v0.2.2
 [0.2.1]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.0...rust_v0.2.1
 [0.2.0]: https://github.com/napalmpapalam/rlx/compare/rust_v0.1.9...rust_v0.2.0

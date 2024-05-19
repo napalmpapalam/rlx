@@ -89,7 +89,7 @@ jobs:
         if: matrix.build == 'linux'
         run: |
           sudo apt-get update -
-          sudo apt-get install musl-tools pkg-config libssl-dev -y
+          sudo apt-get install musl-tools
 
       - name: Install p7zip (MacOS)
         if: matrix.build == 'macos'
@@ -105,11 +105,15 @@ jobs:
       - name: Build (MacOS)
         if: matrix.build == 'macos'
         working-directory: ${{ env.WORKING_DIR }}
-        run: cargo build --release
+        run: |
+          rustup target add ${{ env.MACOS_TARGET }}
+          cargo build --release --target ${{ env.MACOS_TARGET }}
 
       - name: Build (Windows)
         if: matrix.build == 'windows'
         working-directory: ${{ env.WORKING_DIR }}
-        run: cargo build --release
+        run: |
+          rustup target add ${{ env.WINDOWS_TARGET }}
+          cargo build --release --target ${{ env.WINDOWS_TARGET }}
         env:
           RUSTFLAGS: -Ctarget-feature=+crt-static
