@@ -14,7 +14,6 @@ env:
   RELEASE_DIR: artifacts
   WORKING_DIR: ./
   GITHUB_REF: "${{ github.ref }}"
-  WINDOWS_TARGET: x86_64-pc-windows-msvc
   MACOS_TARGET: x86_64-apple-darwin
   LINUX_TARGET: x86_64-unknown-linux-musl
   CARGO_TERM_COLOR: always
@@ -25,7 +24,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [linux, macos-arm, macos-intel, windows]
+        build: [linux, macos-arm, macos-intel]
         include:
           - build: linux
             os: ubuntu-latest
@@ -35,9 +34,6 @@ jobs:
             rust: stable
           - build: macos-intel
             os: macos-14-large
-            rust: stable
-          - build: windows
-            os: windows-latest
             rust: stable
 
     steps:
@@ -97,7 +93,6 @@ jobs:
         if: matrix.build == 'macos-intel'
         run: brew install p7zip
 
-
       - name: Build (Linux)
         if: matrix.build == 'linux'
         working-directory: ${{ env.WORKING_DIR }}
@@ -115,14 +110,6 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: cargo build --release
 
-      - name: Build (Windows)
-        if: matrix.build == 'windows'
-        working-directory: ${{ env.WORKING_DIR }}
-        run: cargo build --release
-        env:
-          RUSTFLAGS: -Ctarget-feature=+crt-static
-
-
       - name: Create artifact directory
         working-directory: ${{ env.WORKING_DIR }}
         run: |
@@ -135,14 +122,6 @@ jobs:
         run: |
           mv ./target/${{ env.LINUX_TARGET }}/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
           7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
-
-      - name: Create tarball (Windows)
-        if: matrix.build == 'windows'
-        working-directory: ${{ env.WORKING_DIR }}
-        shell: bash
-        run: |
-          mv ./target/release/${{ env.RELEASE_BIN }}.exe ./dist/${{ env.RELEASE_BIN }}.exe
-          7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
       - name: Create tarball (MacOS-arm)
         if: matrix.build == 'macos-arm'
@@ -157,7 +136,6 @@ jobs:
         run: |
           mv ./target/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
           7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
-
 
       - name: Upload Zip
         uses: actions/upload-artifact@v1
@@ -191,11 +169,6 @@ jobs:
         with:
           name: linux
 
-      - name: Download MacOS tarball
-        uses: actions/download-artifact@v1
-        with:
-          name: windows
-
       - name: Download MacOS-arm tarball
         uses: actions/download-artifact@v1
         with:
@@ -215,16 +188,6 @@ jobs:
           asset_path: ./linux/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
           asset_content_type: application/gzip
           asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
-
-      - name: Release Windows tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./windows/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
-          asset_content_type: application/gzip
-          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
       - name: Release MacOS-arm tarball
         uses: actions/upload-release-asset@v1
