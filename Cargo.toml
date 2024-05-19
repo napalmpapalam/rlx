@@ -12,7 +12,6 @@ eyre = "0.6"
 
 colored = "2"
 regex = "1"
-git2 = "0.18"
 semver = "1"
 chrono = "0.4"
 

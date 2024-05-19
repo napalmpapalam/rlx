@@ -1,7 +1,6 @@
 use std::process::Command;
 
 use eyre::{bail, Context as _Context, OptionExt, Result};
-use git2::Repository;
 use once_cell::sync::OnceCell;
 use regex::Regex;
 
@@ -80,11 +79,23 @@ impl Context {
                 return normalize_origin_url(url.as_str());
             }
 
-            let repo = Repository::open(std::env::current_dir()?)?;
-            let origin = repo
-                .find_remote("origin")
-                .wrap_err_with(|| "Failed to find origin remote")?;
-            let url = origin.url().ok_or_eyre("Failed to get git remote URL")?;
+            let output = Command::new("git")
+                .arg("config")
+                .arg("--get")
+                .arg("remote.origin.url")
+                .output()?;
+
+            if !output.status.success() {
+                bail!("Git command executed with failing error code");
+            }
+
+            let url = String::from_utf8_lossy(&output.stdout);
+            let url = url.trim();
+
+            if url.is_empty() {
+                bail!("Failed to get git remote URL");
+            }
+
             normalize_origin_url(url)
         })
     }
