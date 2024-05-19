@@ -100,14 +100,19 @@ jobs:
       - name: Build (MacOS)
         if: matrix.build == 'macos'
         working-directory: ${{ env.WORKING_DIR }}
-        run: cargo build --release
+        run: |
+          rustup target add ${{ env.MACOS_TARGET }}
+          cargo build --release --target ${{ env.MACOS_TARGET }}
 
       - name: Build (Windows)
         if: matrix.build == 'windows'
         working-directory: ${{ env.WORKING_DIR }}
-        run: cargo build --release
+        run: |
+          rustup target add ${{ env.WINDOWS_TARGET }}
+          cargo build --release --target ${{ env.WINDOWS_TARGET }}
         env:
           RUSTFLAGS: -Ctarget-feature=+crt-static
+
 
       - name: Create artifact directory
         working-directory: ${{ env.WORKING_DIR }}

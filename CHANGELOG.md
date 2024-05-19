@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2024-05-19
+### Changed
+- Trying to fix macos binary
+
 ## [0.2.3] - 2024-05-19
 ### Changed
 - Trying to fix macos binary
@@ -72,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 
 
-[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.3...HEAD
+[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.4...HEAD
+[0.2.4]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.3...rust_v0.2.4
 [0.2.3]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.2...rust_v0.2.3
 [0.2.2]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.1...rust_v0.2.2
 [0.2.1]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.0...rust_v0.2.1
