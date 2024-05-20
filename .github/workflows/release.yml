@@ -149,7 +149,7 @@ jobs:
         if: matrix.build == 'linux'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}
           path: ${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
           if-no-files-found: error
 
@@ -157,7 +157,7 @@ jobs:
         if: matrix.build == 'macos-arm'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.MACOS_TARGET }}-arm64
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.MACOS_TARGET }}-arm64
           path: ${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
           if-no-files-found: error
 
@@ -165,7 +165,7 @@ jobs:
         if: matrix.build == 'macos-intel'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}-x64
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}-x64
           path: ${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
           if-no-files-found: error
 
@@ -173,7 +173,7 @@ jobs:
         if: matrix.build == 'windows'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.WINDOWS_TARGET }}
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.WINDOWS_TARGET }}
           path: ${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
           if-no-files-found: error
 
@@ -185,22 +185,22 @@ jobs:
       - name: Download Linux tarball
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}
 
       - name: Download MacOS-arm tarball
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.MACOS_TARGET }}-arm64
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.MACOS_TARGET }}-arm64
 
       - name: Download MacOS-intel tarball
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}-x64
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.LINUX_TARGET }}-x64
 
       - name: Download MacOS tarball
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.WINDOWS_TARGET }}
+          name: ${{ env.RELEASE_BIN }}-${{ env.VERSION }}-${{ env.WINDOWS_TARGET }}
 
       - name: Make GitHub Release
         uses: softprops/action-gh-release@v2
