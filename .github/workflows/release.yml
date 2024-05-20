@@ -9,6 +9,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 env:
   RELEASE_BIN: rlx
   RELEASE_DIR: artifacts
@@ -40,12 +43,11 @@ jobs:
             os: windows-latest
             rust: stable
 
-
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
 
       - name: Cache Cargo registry
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         if: matrix.rust
         with:
           path: ~/.cargo/registry
@@ -54,7 +56,7 @@ jobs:
             ${{ matrix.build }}-stable-cargo-registry-
 
       - name: Cache Cargo index
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         if: matrix.rust
         with:
           path: ~/.cargo/git
@@ -63,7 +65,7 @@ jobs:
             ${{ matrix.build }}-stable-cargo-index-
 
       - name: Cache Cargo build
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         if: matrix.rust
         with:
           path: target/release
@@ -158,7 +160,7 @@ jobs:
           7z a -ttar -so -an ./dist | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
       - name: Upload Zip
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.build }}
           path: ./${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}
@@ -175,74 +177,37 @@ jobs:
           echo "using version tag ${GITHUB_REF:15}"
           echo ::set-output name=version::"${GITHUB_REF:15}"
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: rust_${{ steps.get_version.outputs.VERSION }}
-          release_name: ${{ steps.get_version.outputs.VERSION }}
-
       - name: Download Linux tarball
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: linux
 
       - name: Download MacOS-arm tarball
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: macos-arm
 
       - name: Download MacOS-intel tarball
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: macos-intel
 
       - name: Download MacOS tarball
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: windows
 
-      - name: Release Linux tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Make GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./linux/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
-          asset_content_type: application/gzip
-          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
-
-      - name: Release MacOS-arm tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./macos-arm/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
-          asset_content_type: application/gzip
-          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
-
-      - name: Release MacOS-intel tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./macos-intel/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
-          asset_content_type: application/gzip
-          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
-
-      - name: Release Windows tarball
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./windows/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
-          asset_content_type: application/gzip
-          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
+          tag_name: rust_${{ steps.get_version.outputs.VERSION }}
+          name: ${{ steps.get_version.outputs.VERSION }}
+          make_latest: 'true'
+          files: |
+            ./linux/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
+            ./macos-arm/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
+            ./macos-intel/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
+            ./windows/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
   npm_publish:
     name: Publish to NPM
