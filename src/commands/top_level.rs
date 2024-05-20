@@ -36,8 +36,8 @@ pub enum Commands {
 impl Commands {
     pub async fn run(self, context: &Context) -> Result<()> {
         match self {
-            Commands::ReleaseSanityCheck(cmd) => cmd.run(context).await,
-            Commands::Version { cmd } => cmd.run(context).await,
+            Commands::ReleaseSanityCheck(cmd) => cmd.run(context).await.map_err(Error::from),
+            Commands::Version { cmd } => cmd.run(context).await.map_err(Error::from),
             Commands::Changelog { cmd } => cmd.run(context).await.map_err(Error::from),
         }
     }
