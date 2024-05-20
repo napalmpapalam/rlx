@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2024-05-20
+### Fixed
+- Getting git tags for the `rsc` command
+
 ## [0.3.2] - 2024-05-20
 ### Fixed
 - Dist files namings
@@ -101,7 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 
 
-[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.3.2...HEAD
+[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.4.0...HEAD
+[0.4.0]: https://github.com/napalmpapalam/rlx/compare/rust_v0.3.2...rust_v0.4.0
 [0.3.2]: https://github.com/napalmpapalam/rlx/compare/rust_v0.3.1...rust_v0.3.2
 [0.3.1]: https://github.com/napalmpapalam/rlx/compare/rust_v0.3.0...rust_v0.3.1
 [0.3.0]: https://github.com/napalmpapalam/rlx/compare/rust_v0.2.7...rust_v0.3.0

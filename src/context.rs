@@ -113,7 +113,7 @@ impl Context {
             }
 
             let refs_report = String::from_utf8_lossy(&output.stdout);
-            let rx = Regex::new(r"/tag: ([\w\d\-_.]+)/i")?;
+            let rx = Regex::new(r"(?i)tag: ([\w\d\-_.]+)")?;
             let version_match = rx.captures(&refs_report);
 
             if version_match.is_none() {
