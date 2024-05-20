@@ -31,11 +31,11 @@
   - [`rlx rsc`](#rlx-rsc)
   - [`rlx version`](#rlx-version)
     - [`rlx version apply`](#rlx-version-apply)
-  - [`rlx change-log`](#rlx-change-log)
-    - [`rlx change-log get`](#rlx-change-log-get)
-    - [`rlx change-log format`](#rlx-change-log-format)
-    - [`rlx change-log validate`](#rlx-change-log-validate)
-    - [`rlx change-log release`](#rlx-change-log-release)
+  - [`rlx changelog`](#rlx-changelog)
+    - [`rlx changelog get`](#rlx-changelog-get)
+    - [`rlx changelog format`](#rlx-changelog-format)
+    - [`rlx changelog validate`](#rlx-changelog-validate)
+    - [`rlx changelog release`](#rlx-changelog-release)
   - [`rlx help`](#rlx-help)
 - [Contribute](#contribute)
   - [Reporting Issues](#reporting-issues)
@@ -44,7 +44,7 @@
 
 ## Changelog
 
-For the change log, see [CHANGELOG.md](CHANGELOG.md).
+For the changelog, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -148,18 +148,18 @@ npx rlx version apply [OPTIONS] <VERSION>
 npx rlx version apply 1.0.0
 ```
 
-### `rlx change-log`
+### `rlx changelog`
 
 Changelog commands, used to parse and manipulate changelog.
 
-#### `rlx change-log get`
+#### `rlx changelog get`
 
 Get the release changelog for the provided version.
 
 **Usage:**
 
 ```sh
-npx rlx change-log get [OPTIONS] <VERSION>
+npx rlx changelog get [OPTIONS] <VERSION>
 ```
 
 **Arguments:**
@@ -169,37 +169,37 @@ npx rlx change-log get [OPTIONS] <VERSION>
 **Example:**
 
 ```sh
-npx rlx change-log get 1.0.0
+npx rlx changelog get 1.0.0
 ```
 
-#### `rlx change-log format`
+#### `rlx changelog format`
 
 Format the changelog file, making sure it's valid and consistent.
 
 **Usage:**
 
 ```sh
-npx rlx change-log format [OPTIONS]
+npx rlx changelog format [OPTIONS]
 ```
 
-#### `rlx change-log validate`
+#### `rlx changelog validate`
 
 Validate the changelog file, making sure it's valid and consistent.
 
 **Usage:**
 
 ```sh
-npx rlx change-log validate [OPTIONS]
+npx rlx changelog validate [OPTIONS]
 ```
 
-#### `rlx change-log release`
+#### `rlx changelog release`
 
 Make a release from `[Unreleased]` section
 
 **Usage:**
 
 ```sh
-npx rlx change-log release [OPTIONS] <VERSION>
+npx rlx changelog release [OPTIONS] <VERSION>
 ```
 
 **Arguments:**
@@ -209,7 +209,7 @@ npx rlx change-log release [OPTIONS] <VERSION>
 **Example:**
 
 ```sh
-npx rlx change-log release 1.0.0
+npx rlx changelog release 1.0.0
 ```
 
 ### `rlx help`
@@ -229,7 +229,8 @@ Usage: rlx [OPTIONS] <COMMAND>
 
 Commands:
   rsc         Release Sanity Check. Check that a release is sane (`package.json`, `CHANGELOG.md` and semantic versioning are valid for the release)
-  change-log  Change Log commands, used to parse and manipulate changelog
+  changelog   Changelog commands, used to parse and manipulate changelog
+  version     Version commands, used to manipulate versions
   help        Print this message or the help of the given subcommand(s)
 
 Options:
