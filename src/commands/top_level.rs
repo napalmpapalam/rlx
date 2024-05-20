@@ -16,9 +16,9 @@ pub enum Commands {
     /// valid for the release)
     #[command(name = "rsc")]
     ReleaseSanityCheck(rsc::ReleaseSanityCheck),
-    /// Change Log commands, used to parse and manipulate changelog
+    /// Changelog commands, used to parse and manipulate changelog
     #[command(alias = "cl")]
-    ChangeLog {
+    Changelog {
         #[command(subcommand)]
         #[serde(flatten)]
         cmd: changelog::Changelog,
@@ -38,7 +38,7 @@ impl Commands {
         match self {
             Commands::ReleaseSanityCheck(cmd) => cmd.run(context).await,
             Commands::Version { cmd } => cmd.run(context).await,
-            Commands::ChangeLog { cmd } => cmd.run(context).await.map_err(Error::from),
+            Commands::Changelog { cmd } => cmd.run(context).await.map_err(Error::from),
         }
     }
 }
