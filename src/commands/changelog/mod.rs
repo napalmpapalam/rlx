@@ -3,10 +3,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{context::Context, error::Result};
 
-use self::{format::FormatCmd, get::GetCmd, release::ReleaseCmd, validate::ValidateCmd};
+use self::{
+    format::FormatCmd, get::GetCmd, new::NewCmd, release::ReleaseCmd, validate::ValidateCmd,
+};
 
 mod format;
 mod get;
+mod new;
 mod release;
 mod validate;
 
@@ -21,6 +24,8 @@ pub(crate) enum Changelog {
     Release(ReleaseCmd),
     /// Format a changelog
     Format(FormatCmd),
+    /// Create a new changelog
+    New(NewCmd),
 }
 
 impl Changelog {
@@ -30,6 +35,7 @@ impl Changelog {
             Changelog::Get(cmd) => cmd.run(ctx),
             Changelog::Release(cmd) => cmd.run(ctx),
             Changelog::Format(cmd) => cmd.run(ctx),
+            Changelog::New(cmd) => cmd.run(ctx),
         }
     }
 }

@@ -1,4 +1,5 @@
 use eyre::Error as Report;
+use keep_a_changelog::{changelog::ChangelogBuilderError, release::ReleaseBuilderError};
 
 use crate::log::MessageBuilder;
 
@@ -53,6 +54,18 @@ impl From<&str> for Error {
 impl From<String> for Error {
     fn from(msg: String) -> Self {
         Self::new(msg)
+    }
+}
+
+impl From<ReleaseBuilderError> for Error {
+    fn from(err: ReleaseBuilderError) -> Self {
+        Self::new(err.to_string())
+    }
+}
+
+impl From<ChangelogBuilderError> for Error {
+    fn from(err: ChangelogBuilderError) -> Self {
+        Self::new(err.to_string())
     }
 }
 

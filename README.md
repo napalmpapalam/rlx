@@ -32,6 +32,7 @@
   - [`rlx version`](#rlx-version)
     - [`rlx version apply`](#rlx-version-apply)
   - [`rlx changelog`](#rlx-changelog)
+    - [`rlx changelog new`](#rlx-changelog-new)
     - [`rlx changelog get`](#rlx-changelog-get)
     - [`rlx changelog format`](#rlx-changelog-format)
     - [`rlx changelog validate`](#rlx-changelog-validate)
@@ -151,6 +152,22 @@ npx rlx version apply 1.0.0
 ### `rlx changelog`
 
 Changelog commands, used to parse and manipulate changelog.
+
+#### `rlx changelog new`
+
+Generate a new changelog file.
+
+**Usage:**
+
+```sh
+npx rlx changelog new [OPTIONS]
+```
+
+**Example:**
+
+```sh
+npx rlx changelog new
+```
 
 #### `rlx changelog get`
 

@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.4.1] - 2024-05-20
+### Added
+- `changelog new` command to create a new changelog file.
+
 ### Fixed
 - `Changelog` naming consistency throughout the project.
 
@@ -107,7 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 
 
-[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.4.0...HEAD
+[Unreleased]: https://github.com/napalmpapalam/rlx/compare/rust_v0.4.1...HEAD
+[0.4.1]: https://github.com/napalmpapalam/rlx/compare/rust_v0.4.0...rust_v0.4.1
 [0.4.0]: https://github.com/napalmpapalam/rlx/compare/rust_v0.3.2...rust_v0.4.0
 [0.3.2]: https://github.com/napalmpapalam/rlx/compare/rust_v0.3.1...rust_v0.3.2
 [0.3.1]: https://github.com/napalmpapalam/rlx/compare/rust_v0.3.0...rust_v0.3.1
