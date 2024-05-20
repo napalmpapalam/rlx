@@ -163,7 +163,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.build }}
-          path: ./${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}
+          path: ${{ env.WORKING_DIR }}/${{ env.RELEASE_DIR }}
 
   release:
     name: Github Release
@@ -204,10 +204,10 @@ jobs:
           name: ${{ steps.get_version.outputs.VERSION }}
           make_latest: 'true'
           files: |
-            ./linux/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
-            ./macos-arm/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
-            ./macos-intel/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
-            ./windows/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
+            linux/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
+            macos-arm/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-arm64.tar.gz
+            macos-intel/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}-x64.tar.gz
+            windows/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
   npm_publish:
     name: Publish to NPM
